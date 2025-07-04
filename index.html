@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Painel de Aptidão Militar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .status-btn {
+        cursor: pointer;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        font-weight: 600;
+        color: white;
+        transition: background-color 0.3s;
+        min-width: 170px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+      .status-btn:disabled {
+        cursor: not-allowed;
+        background-color: #9ca3af;
+      }
+      .status-apto {
+        background-color: #16a34a;
+      }
+      .status-apto:hover:not(:disabled) {
+        background-color: #15803d;
+      }
+      .status-inapto {
+        background-color: #dc2626;
+      }
+      .status-inapto:hover:not(:disabled) {
+        background-color: #b91c1c;
+      }
+      body {
+        background-color: #f1f5f9;
+      }
+      .item-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: #f8fafc;
+        padding: 0.75rem;
+        border-radius: 0.375rem;
+        border: 1px solid #e2e8f0;
+      }
+      .nav-tab {
+        cursor: pointer;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-bottom: 4px solid transparent;
+        color: #475569;
+      }
+      .nav-tab-active {
+        color: #2563eb;
+        border-bottom-color: #2563eb;
+      }
+      .card {
+        background-color: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1),
+          0 2px 4px -2px rgb(0 0 0 / 0.1);
+      }
+      details > summary {
+        cursor: pointer;
+        font-weight: 600;
+      }
+      details[open] > summary {
+        margin-bottom: 0.5rem;
+      }
+      .loader {
+        border: 4px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 4px solid #3498db;
+        width: 40px;
+        height: 40px;
+        animation: spin 2s linear infinite;
+        margin: 2rem auto;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      #spreadsheet-table thead th {
+        cursor: pointer;
+        position: relative;
+        user-select: none;
+      }
+      #spreadsheet-table thead th:hover {
+        background-color: #334155;
+      }
+      #spreadsheet-table thead th .sort-indicator {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.8em;
+      }
+      #spreadsheet-body tr:hover {
+        background-color: #eff6ff;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body class="font-sans antialiased">
+    <div class="container mx-auto p-4 md:p-8 max-w-screen-xl">
+      <header class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-slate-800">
+          Painel de Aptidão Militar
+        </h1>
+      </header>
+
+      <nav
+        class="flex flex-wrap justify-center border-b mb-8 bg-white rounded-t-lg shadow"
+      >
+        <div id="tab-form" class="nav-tab nav-tab-active">Formulário</div>
+        <div id="tab-table" class="nav-tab">Visualizar Relatórios</div>
+        <div id="tab-report" class="nav-tab">Gerador de Relatórios</div>
+        <div id="tab-spreadsheet" class="nav-tab">Planilha Geral</div>
+        <div id="tab-physical-report" class="nav-tab">Relatório Físico</div>
+      </nav>
+
+      <main id="content-form">
+        <div id="form-content">
+          <input type="hidden" id="editing-id" />
+          <section
+            id="dados-pessoais"
+            class="bg-white p-6 rounded-lg shadow-md mb-8"
+          >
+            <h2 class="text-2xl font-bold text-slate-700 border-b pb-2 mb-4">
+              Dados do Militar
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div class="w-full md:col-span-2 lg:col-span-3">
+                <label
+                  for="edit-selector"
+                  class="block text-sm font-medium text-slate-700 mb-1"
+                  >Carregar Militar para Edição</label
+                >
+                <select
+                  id="edit-selector"
+                  class="p-2 border rounded-md focus:ring-2 focus:ring-blue-500 w-full bg-gray-50"
+                >
+                  <option value="">
+                    -- Selecione um militar para editar os dados --
+                  </option>
+                </select>
+              </div>
+              <input
+                type="text"
+                id="nome_completo"
+                placeholder="Nome Completo"
+                class="p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="text"
+                id="numero_pm"
+                placeholder="Número PM"
+                class="p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="text"
+                id="unidade_origem"
+                placeholder="Unidade de Origem"
+                class="p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="text"
+                id="unidade_nais_sas"
+                placeholder="Unidade NAIS/SAS"
+                class="p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="text"
+                id="ata_jcs"
+                placeholder="Ata JCS"
+                class="p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </section>
+          <section
+            id="dispensas-gerais"
+            class="bg-white p-6 rounded-lg shadow-md mb-8"
+          >
+            <h2 class="text-2xl font-bold text-slate-700 border-b pb-2 mb-4">
+              Dispensas Gerais
+            </h2>
+            <p class="text-sm text-slate-500 mb-4">
+              Clique para alternar. Vermelho = ❌ Dispensado | Verde = ✔️ Não
+              Dispensado.
+            </p>
+            <div
+              id="dispensas-container"
+              class="grid grid-cols-1 lg:grid-cols-3 gap-x-6 gap-y-2"
+            >
+              <div class="loader"></div>
+            </div>
+          </section>
+          <section
+            id="adaptacao-pedagogica"
+            class="bg-white p-6 rounded-lg shadow-md mb-8"
+          >
+            <h2 class="text-2xl font-bold text-slate-700 border-b pb-2 mb-4">
+              Adaptação Pedagógica (O que PODE fazer)
+            </h2>
+            <p class="text-sm text-slate-500 mb-4">
+              Clique para alternar. Verde = ✔️ Apto | Vermelho = ❌ Inapto.
+            </p>
+            <div id="adaptacao-container" class="space-y-8">
+              <div class="loader"></div>
+            </div>
+          </section>
+          <div class="mt-8 text-center flex justify-center gap-4 flex-wrap">
+            <button
+              id="save-db-btn"
+              class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg disabled:bg-indigo-300"
+            >
+              Salvar no Banco de Dados
+            </button>
+            <button
+              id="reset-btn"
+              class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg disabled:bg-gray-300"
+            >
+              Limpar Formulário
+            </button>
+          </div>
+        </div>
+      </main>
+
+      <main id="content-table" class="hidden">
+        <section class="bg-white p-6 rounded-lg shadow-md">
+          <div
+            class="flex flex-col md:flex-row justify-between items-center border-b pb-4 mb-6 gap-4"
+          >
+            <h2 class="text-2xl font-bold text-slate-700">Relatórios Salvos</h2>
+            <div class="flex items-center gap-4 w-full md:w-auto">
+              <input
+                type="text"
+                id="search-input"
+                placeholder="Buscar por Nome ou Nº PM..."
+                class="p-2 border rounded-md focus:ring-2 focus:ring-blue-500 w-full md:w-auto"
+              />
+              <button
+                id="filter-btn"
+                class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded"
+              >
+                Filtrar
+              </button>
+            </div>
+          </div>
+          <div
+            id="cards-container"
+            class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+          >
+            <div class="loader"></div>
+          </div>
+        </section>
+      </main>
+
+      <main id="content-report" class="hidden">
+        <section class="bg-white p-6 rounded-lg shadow-md">
+          <h2 class="text-2xl font-bold text-slate-700 border-b pb-2 mb-4">
+            Gerar Relatório de Aptos e Inaptos
+          </h2>
+          <p class="text-sm text-slate-500 mb-6">
+            Selecione os critérios da missão. O sistema listará quem está
+            totalmente apto e quem possui alguma restrição.
+          </p>
+          <div class="mb-8 border-b pb-6">
+            <h4 class="text-lg font-semibold text-slate-600 mb-3">
+              Filtros Rápidos por Grupo de Atividade:
+            </h4>
+            <div
+              id="quick-filters-container"
+              class="flex flex-wrap gap-2"
+            ></div>
+          </div>
+          <div id="report-filters-container" class="space-y-6">
+            <div class="loader"></div>
+          </div>
+          <div class="mt-8 text-center">
+            <button
+              id="generate-report-btn"
+              class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg"
+            >
+              Gerar Listas
+            </button>
+          </div>
+          <div id="report-results-container" class="mt-8"></div>
+        </section>
+      </main>
+
+      <main id="content-spreadsheet" class="hidden">
+        <section class="bg-white p-6 rounded-lg shadow-md">
+          <div
+            class="flex flex-col md:flex-row justify-between items-center gap-4"
+          >
+            <h2 class="text-2xl font-bold text-slate-700">
+              Visão Geral dos Militares Cadastrados (<span
+                id="spreadsheet-count"
+                >0</span
+              >)
+            </h2>
+            <input
+              type="text"
+              id="spreadsheet-search-input"
+              placeholder="Filtrar por Nome, Nº PM ou Unidade..."
+              class="p-2 border rounded-md focus:ring-2 focus:ring-blue-500 w-full md:w-1/3"
+            />
+          </div>
+          <div class="overflow-x-auto mt-6">
+            <table
+              id="spreadsheet-table"
+              class="min-w-full bg-white text-sm text-left"
+            >
+              <thead class="bg-slate-800 text-white"></thead>
+              <tbody id="spreadsheet-body"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+
+      <main id="content-physical-report" class="hidden">
+        <section class="bg-white p-6 rounded-lg shadow-md">
+          <h2 class="text-2xl font-bold text-slate-700 border-b pb-2 mb-4">
+            Dashboard de Aptidão Física
+          </h2>
+          <p class="text-sm text-slate-500 mb-6">
+            Visualização automática dos grupos de militares aptos para
+            atividades físicas comuns.
+          </p>
+          <div
+            id="physical-report-container"
+            class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6"
+          >
+            <div class="loader"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      // --- VARIÁVEIS GLOBAIS ---
+      let formConfig = null;
+      let allReportsData = [];
+      const API_BASE_URL = "http://localhost:3000/api";
+      let currentSort = {
+        key: "nome_completo",
+        direction: "asc",
+      };
+      const quickFilterGroups = {
+        "Corrida / Marcha": [
+          "Policiamento externo a pé",
+          "Atividades de impacto: a) corrida",
+          "Maneabilidade",
+        ],
+        "Membros Superiores": [
+          "Atividades com levantamento de material pesado",
+          "Atividades de impacto: b) flexão e barra (membro superior)",
+          "Defesa pessoal",
+          "Uso e manuseio de armamento",
+          "Combate a incêndio",
+        ],
+        "Membros Inferiores": [
+          "Policiamento externo a pé",
+          "Atividades de impacto: a) corrida",
+          "Atividades de impacto: outros",
+          "Defesa pessoal",
+          "Maneabilidade",
+          "Equitação",
+        ],
+        Abdominal: [
+          "Atividades de impacto: c) flexão abdominal",
+          "Defesa pessoal",
+          "Atividades com levantamento de material pesado",
+        ],
+        "Geral (Físico Intenso)": [
+          "Atividade física: terrestre",
+          "Atividade física: em altura",
+          "Atividade física: aquática",
+          "Defesa pessoal",
+          "Esportes coletivos",
+          "Atividades de impacto: a) corrida",
+          "Atividades de impacto: b) flexão e barra (membro superior)",
+          "Atividades de impacto: c) flexão abdominal",
+        ],
+      };
+
+      // --- FUNÇÕES DE LÓGICA E RENDERIZAÇÃO ---
+      const toSqlName = (text, prefix = "") =>
+        `${prefix}${text}`.replace(/[^a-zA-Z0-9_]/g, "_");
+
+      function createItemRow(prefix, text, id, category, defaultStatus) {
+        const isDispensa = category === "dispensas";
+        const [positiveText, negativeText] = isDispensa
+          ? ["✔️ Não Dispensado", "❌ Dispensado"]
+          : ["✔️ Apto", "❌ Inapto"];
+        const [positiveClass, negativeClass] = ["status-apto", "status-inapto"];
+        const defaultIsPositive = defaultStatus === "positivo";
+        const div = document.createElement("div");
+        div.className = "item-row";
+        const label = document.createElement("p");
+        label.className = "text-slate-700 mr-4 flex-grow";
+        label.innerHTML = `<span class="font-bold w-16 inline-block">${prefix}</span> ${text}`;
+        const button = document.createElement("button");
+        button.id = id;
+        button.className = `status-btn ${
+          defaultIsPositive ? positiveClass : negativeClass
+        }`;
+        button.textContent = defaultIsPositive ? positiveText : negativeText;
+        button.dataset.status = defaultIsPositive ? "positivo" : "negativo";
+        button.dataset.text = text;
+        button.addEventListener("click", () => {
+          const isPositive = button.dataset.status === "positivo";
+          button.dataset.status = isPositive ? "negativo" : "positivo";
+          button.textContent = isPositive ? negativeText : positiveText;
+          button.classList.toggle(positiveClass);
+          button.classList.toggle(negativeClass);
+        });
+        div.appendChild(label);
+        div.appendChild(button);
+        return div;
+      }
+
+      function renderDispensas() {
+        const container = document.getElementById("dispensas-container");
+        container.innerHTML = "";
+        const dispensas = formConfig.dispensasGerais;
+        const colSize = Math.ceil(dispensas.length / 3);
+        for (let i = 0; i < 3; i++) {
+          const colDiv = document.createElement("div");
+          colDiv.className = "space-y-4";
+          const columnItems = dispensas.slice(i * colSize, (i + 1) * colSize);
+          columnItems.forEach((item) => {
+            const id = `dispensa-${toSqlName(item.text)}`;
+            colDiv.appendChild(
+              createItemRow(
+                item.numeral,
+                item.text,
+                id,
+                "dispensas",
+                "positivo"
+              )
+            );
+          });
+          container.appendChild(colDiv);
+        }
+      }
+
+      function renderAdaptacao() {
+        const container = document.getElementById("adaptacao-container");
+        container.innerHTML = "";
+        Object.keys(formConfig.adaptacaoPedagogica).forEach((categoryName) => {
+          const categoryDiv = document.createElement("div");
+          categoryDiv.className = "mb-6";
+          const categoryTitle = document.createElement("h3");
+          categoryTitle.className =
+            "text-xl font-semibold text-slate-700 mb-4 border-b pb-2";
+          categoryTitle.textContent = categoryName;
+          categoryDiv.appendChild(categoryTitle);
+          const itemsContainer = document.createElement("div");
+          itemsContainer.className =
+            "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4";
+          formConfig.adaptacaoPedagogica[categoryName].forEach(
+            (itemText, index) => {
+              const id = `adaptacao-${toSqlName(categoryName)}-${index}`;
+              const prefix = `${String.fromCharCode(97 + index)})`;
+              itemsContainer.appendChild(
+                createItemRow(prefix, itemText, id, "adaptacao", "negativo")
+              );
+            }
+          );
+          categoryDiv.appendChild(itemsContainer);
+          container.appendChild(categoryDiv);
+        });
+      }
+
+      function renderReportFilters() {
+        const container = document.getElementById("report-filters-container");
+        container.innerHTML = "";
+        const dispensasDiv = document.createElement("div");
+        dispensasDiv.innerHTML =
+          '<h3 class="text-xl font-semibold text-slate-700 mb-3">Dispensado de:</h3>';
+        const dispensasGrid = document.createElement("div");
+        dispensasGrid.className =
+          "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-2";
+        formConfig.dispensasGerais.forEach((item) => {
+          const checkboxDiv = document.createElement("div");
+          checkboxDiv.className = "flex items-center";
+          checkboxDiv.innerHTML = `<input id="filter-${toSqlName(
+            item.text
+          )}" type="checkbox" value="${
+            item.text
+          }" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"><label for="filter-${toSqlName(
+            item.text
+          )}" class="ml-3 text-sm text-gray-700">${item.text}</label>`;
+          dispensasGrid.appendChild(checkboxDiv);
+        });
+        dispensasDiv.appendChild(dispensasGrid);
+        container.appendChild(dispensasDiv);
+        const aptidoesDiv = document.createElement("div");
+        aptidoesDiv.innerHTML =
+          '<h3 class="text-xl font-semibold text-slate-700 mt-6 mb-3">Inapto para:</h3>';
+        Object.keys(formConfig.adaptacaoPedagogica).forEach((category) => {
+          const categoryDiv = document.createElement("div");
+          categoryDiv.innerHTML = `<h4 class="font-bold text-md text-slate-600 mt-4">${category}</h4>`;
+          const aptidoesGrid = document.createElement("div");
+          aptidoesGrid.className =
+            "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-2 pl-4 border-l-2 border-gray-200";
+          formConfig.adaptacaoPedagogica[category].forEach((itemText) => {
+            const uniqueText = `${category} - ${itemText}`;
+            const checkboxDiv = document.createElement("div");
+            checkboxDiv.className = "flex items-center";
+            checkboxDiv.innerHTML = `<input id="filter-${toSqlName(
+              uniqueText
+            )}" type="checkbox" value="${uniqueText}" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"><label for="filter-${toSqlName(
+              uniqueText
+            )}" class="ml-3 text-sm text-gray-700">${itemText}</label>`;
+            aptidoesGrid.appendChild(checkboxDiv);
+          });
+          categoryDiv.appendChild(aptidoesGrid);
+          aptidoesDiv.appendChild(categoryDiv);
+        });
+        container.appendChild(aptidoesDiv);
+      }
+
+      function renderQuickFilters() {
+        const container = document.getElementById("quick-filters-container");
+        container.innerHTML = "";
+        Object.keys(quickFilterGroups).forEach((groupName) => {
+          const button = document.createElement("button");
+          button.className =
+            "bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg text-sm";
+          button.textContent = groupName;
+          button.dataset.group = groupName;
+          container.appendChild(button);
+        });
+      }
+
+      function renderSpreadsheet(dataToDisplay) {
+        const tableBody = document.getElementById("spreadsheet-body");
+        const tableHead = document.querySelector("#spreadsheet-table thead");
+        const countSpan = document.getElementById("spreadsheet-count");
+        tableHead.innerHTML = "";
+        tableBody.innerHTML = "";
+        countSpan.textContent = dataToDisplay.length;
+        const columnsToShow = [
+          { key: "#", label: "#", sortable: false },
+          { key: "numero_pm", label: "Nº PM", sortable: true },
+          { key: "nome_completo", label: "Nome Completo", sortable: true },
+          { key: "unidade_origem", label: "Unidade de Origem", sortable: true },
+          { key: "ata_jcs", label: "Ata JCS", sortable: false },
+        ];
+        const headerRow = document.createElement("tr");
+        columnsToShow.forEach((col) => {
+          const th = document.createElement("th");
+          th.className = "p-3";
+          th.textContent = col.label;
+          if (col.sortable) {
+            th.dataset.key = col.key;
+            const indicator = document.createElement("span");
+            indicator.className = "sort-indicator";
+            if (currentSort.key === col.key) {
+              indicator.textContent =
+                currentSort.direction === "asc" ? "▲" : "▼";
+            }
+            th.appendChild(indicator);
+          }
+          headerRow.appendChild(th);
+        });
+        tableHead.appendChild(headerRow);
+        if (dataToDisplay.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="${columnsToShow.length}" class="text-center p-4">Nenhum resultado encontrado.</td></tr>`;
+          return;
+        }
+        dataToDisplay.forEach((report, index) => {
+          const row = document.createElement("tr");
+          row.className = "border-b hover:bg-slate-100 cursor-pointer";
+          row.dataset.id = report.id;
+          columnsToShow.forEach((col) => {
+            const td = document.createElement("td");
+            td.className = "p-3";
+            if (col.key === "#") {
+              td.textContent = index + 1;
+            } else {
+              td.textContent = report[col.key] || "";
+            }
+            row.appendChild(td);
+          });
+          tableBody.appendChild(row);
+        });
+      }
+
+      function renderPhysicalReport(data) {
+        const container = document.getElementById("physical-report-container");
+        container.innerHTML = "";
+        if (!data || Object.keys(data).length === 0) {
+          container.innerHTML =
+            '<p class="text-slate-500 col-span-full">Não foi possível gerar o relatório.</p>';
+          return;
+        }
+        for (const groupName in data) {
+          const groupData = data[groupName];
+          const isRestrictionGroup = groupName
+            .toLowerCase()
+            .includes("restrição");
+
+          const sectionDiv = document.createElement("div");
+          sectionDiv.className = "bg-slate-50 p-4 rounded-lg border";
+
+          const title = document.createElement("h3");
+          title.className = "text-lg font-bold text-slate-800 mb-3";
+
+          if (isRestrictionGroup) {
+            title.innerHTML = `❌ ${groupName} <span class="text-red-600 font-semibold">(${groupData.length})</span>`;
+          } else {
+            const cleanGroupName = groupName.replace("Aptos para ", "");
+            title.innerHTML = `✔️ Aptos para ${cleanGroupName} <span class="text-green-600 font-semibold">(${groupData.length})</span>`;
+          }
+
+          sectionDiv.appendChild(title);
+
+          if (groupData.length > 0) {
+            const list = document.createElement("ul");
+            list.className = "list-disc list-inside space-y-1 text-sm";
+            groupData.forEach((militar) => {
+              const item = document.createElement("li");
+              item.className = "text-gray-800";
+              item.textContent = `${militar.nome_completo} (Nº PM: ${
+                militar.numero_pm || "N/A"
+              })`;
+              list.appendChild(item);
+            });
+            sectionDiv.appendChild(list);
+          } else {
+            noDataText = document.createElement("p");
+            noDataText.className = "text-sm text-slate-500";
+            noDataText.textContent = isRestrictionGroup
+              ? "Nenhum militar com esta restrição."
+              : "Nenhum militar totalmente apto para este grupo.";
+            sectionDiv.appendChild(noDataText);
+          }
+          container.appendChild(sectionDiv);
+        }
+      }
+
+      function sortData(key) {
+        if (currentSort.key === key) {
+          currentSort.direction =
+            currentSort.direction === "asc" ? "desc" : "asc";
+        } else {
+          currentSort.key = key;
+          currentSort.direction = "asc";
+        }
+        allReportsData.sort((a, b) => {
+          const valA = a[currentSort.key] || "";
+          const valB = b[currentSort.key] || "";
+          const comparison = valA.localeCompare(valB, "pt-BR", {
+            numeric: true,
+          });
+          return currentSort.direction === "asc" ? comparison : -comparison;
+        });
+        filterSpreadsheet();
+      }
+
+      function filterSpreadsheet() {
+        const searchTerm = document
+          .getElementById("spreadsheet-search-input")
+          .value.toLowerCase();
+        const filteredData = allReportsData.filter((report) => {
+          const nome = (report.nome_completo || "").toLowerCase();
+          const numero = (report.numero_pm || "").toLowerCase();
+          const unidade = (report.unidade_origem || "").toLowerCase();
+          return (
+            nome.includes(searchTerm) ||
+            numero.includes(searchTerm) ||
+            unidade.includes(searchTerm)
+          );
+        });
+        renderSpreadsheet(filteredData);
+      }
+
+      function collectDataForDB() {
+        const data = {
+          dados_pessoais: {},
+          dispensas_map: {},
+          aptidoes_map: {},
+        };
+        [
+          "nome_completo",
+          "numero_pm",
+          "unidade_origem",
+          "unidade_nais_sas",
+          "ata_jcs",
+        ].forEach((id) => {
+          data.dados_pessoais[id] = document.getElementById(id).value;
+        });
+        document
+          .querySelectorAll("#dispensas-container .status-btn")
+          .forEach((btn) => {
+            data.dispensas_map[btn.dataset.text] =
+              btn.dataset.status === "negativo" ? "SIM" : "NAO";
+          });
+        Object.keys(formConfig.adaptacaoPedagogica).forEach((categoryName) => {
+          data.aptidoes_map[categoryName] = {};
+          formConfig.adaptacaoPedagogica[categoryName].forEach(
+            (itemText, itemIndex) => {
+              const id = `adaptacao-${toSqlName(categoryName)}-${itemIndex}`;
+              const btn = document.getElementById(id);
+              data.aptidoes_map[categoryName][itemText] =
+                btn.dataset.status === "positivo" ? "SIM" : "NAO";
+            }
+          );
+        });
+        return data;
+      }
+
+      function renderReportCards(dataToRender) {
+        const cardsContainer = document.getElementById("cards-container");
+        cardsContainer.innerHTML = "";
+        if (!formConfig) {
+          cardsContainer.innerHTML =
+            '<p class="col-span-full text-center text-red-500">Aguardando configuração do formulário...</p>';
+          return;
+        }
+        if (dataToRender.length === 0) {
+          cardsContainer.innerHTML =
+            '<p class="col-span-full text-center text-slate-500">Nenhum resultado encontrado.</p>';
+          return;
+        }
+        dataToRender.forEach((report) => {
+          const card = document.createElement("div");
+          card.className = "card p-6 space-y-2 flex flex-col";
+          let dispensasList = "";
+          formConfig.dispensasGerais.forEach((item) => {
+            const colName = toSqlName(item.text, "disp_");
+            if (report[colName] === "SIM") {
+              dispensasList += `<li class="text-red-600">${item.text}</li>`;
+            }
+          });
+          let aptidoesHtml = "";
+          Object.keys(formConfig.adaptacaoPedagogica).forEach(
+            (categoryName) => {
+              let categoryAptidoes = "";
+              formConfig.adaptacaoPedagogica[categoryName].forEach(
+                (itemText) => {
+                  const colName = toSqlName(
+                    `${categoryName}_${itemText}`,
+                    "apto_"
+                  );
+                  if (report[colName] === "SIM") {
+                    categoryAptidoes += `<li class="text-green-600">${itemText}</li>`;
+                  }
+                }
+              );
+              if (categoryAptidoes) {
+                aptidoesHtml += `<details class="mt-2"><summary class="font-semibold text-slate-600">${categoryName}</summary><ul class="list-disc list-inside pl-4 mt-1 text-sm">${categoryAptidoes}</ul></details>`;
+              }
+            }
+          );
+          card.innerHTML = `<div class="flex justify-between items-start"><div><h3 class="font-bold text-xl text-slate-800">${
+            report.nome_completo || "N/A"
+          }</h3><p class="text-sm text-slate-500">Nº PM: ${
+            report.numero_pm || "N/A"
+          } | Unidade: ${
+            report.unidade_origem || "N/A"
+          }</p><p class="text-xs text-slate-400">Ata JCS: ${
+            report.ata_jcs || "N/A"
+          }</p></div></div><div class="flex-grow space-y-2 mt-4"><details><summary class="text-red-700">Dispensas</summary><ul class="list-disc list-inside mt-2 text-sm">${
+            dispensasList || "<li>Nenhuma dispensa registrada.</li>"
+          }</ul></details><details><summary class="text-green-700">Aptidões</summary>${
+            aptidoesHtml ||
+            '<p class="text-sm mt-2">Nenhuma aptidão registrada.</p>'
+          }</details></div><div class="flex justify-end gap-2 mt-4 pt-4 border-t"><button class="edit-btn bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-3 rounded text-sm" data-id="${
+            report.id
+          }">Editar</button><button class="delete-btn bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm" data-id="${
+            report.id
+          }">Excluir</button></div>`;
+          cardsContainer.appendChild(card);
+        });
+      }
+
+      async function fetchAllReports() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/get-relatorios`);
+          if (!response.ok)
+            throw new Error("Falha ao buscar dados do servidor.");
+          const result = await response.json();
+          allReportsData = result.data;
+          allReportsData.sort((a, b) => {
+            const valA = a[currentSort.key] || "";
+            const valB = b[currentSort.key] || "";
+            const comparison = valA.localeCompare(valB, "pt-BR", {
+              numeric: true,
+            });
+            return currentSort.direction === "asc" ? comparison : -comparison;
+          });
+          return allReportsData;
+        } catch (error) {
+          console.error("Erro ao carregar relatórios:", error);
+          alert(
+            "Não foi possível carregar os relatórios. Verifique o console para mais detalhes."
+          );
+          return [];
+        }
+      }
+
+      function filterReports() {
+        const searchTerm = document
+          .getElementById("search-input")
+          .value.toLowerCase();
+        const filteredData = allReportsData.filter((report) => {
+          const nome = (report.nome_completo || "").toLowerCase();
+          const numero = (report.numero_pm || "").toLowerCase();
+          return nome.includes(searchTerm) || numero.includes(searchTerm);
+        });
+        renderReportCards(filteredData);
+      }
+
+      function populateFormForEditing(report) {
+        if (!report) {
+          handleFormReset();
+          return;
+        }
+        document.getElementById("editing-id").value = report.id;
+        [
+          "nome_completo",
+          "numero_pm",
+          "unidade_origem",
+          "unidade_nais_sas",
+          "ata_jcs",
+        ].forEach((id) => {
+          document.getElementById(id).value = report[id] || "";
+        });
+        formConfig.dispensasGerais.forEach((item) => {
+          const colName = toSqlName(item.text, "disp_");
+          const btn = document.querySelector(
+            `#dispensas-container [data-text="${item.text}"]`
+          );
+          if (!btn) return;
+          const isDispensado = report[colName] === "SIM";
+          if (
+            (isDispensado && btn.dataset.status === "positivo") ||
+            (!isDispensado && btn.dataset.status === "negativo")
+          ) {
+            btn.click();
+          }
+        });
+        Object.keys(formConfig.adaptacaoPedagogica).forEach((categoryName) => {
+          formConfig.adaptacaoPedagogica[categoryName].forEach(
+            (itemText, itemIndex) => {
+              const colName = toSqlName(`${categoryName}_${itemText}`, "apto_");
+              const btnId = `adaptacao-${toSqlName(categoryName)}-${itemIndex}`;
+              const btn = document.getElementById(btnId);
+              if (!btn) return;
+              const isApto = report[colName] === "SIM";
+              if (
+                (isApto && btn.dataset.status === "negativo") ||
+                (!isApto && btn.dataset.status === "positivo")
+              ) {
+                btn.click();
+              }
+            }
+          );
+        });
+        document.getElementById("tab-form").click();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function handleFormReset() {
+        document
+          .getElementById("dados-pessoais")
+          .querySelectorAll('input[type="text"]')
+          .forEach((input) => (input.value = ""));
+        document.getElementById("editing-id").value = "";
+        document.getElementById("edit-selector").value = "";
+        document
+          .querySelectorAll("#dispensas-container .status-btn")
+          .forEach((btn) => {
+            if (btn.dataset.status === "negativo") btn.click();
+          });
+        document
+          .querySelectorAll("#adaptacao-container .status-btn")
+          .forEach((btn) => {
+            if (btn.dataset.status === "positivo") btn.click();
+          });
+        document.getElementById("nome_completo").focus();
+      }
+
+      function populateEditDropdown() {
+        const selector = document.getElementById("edit-selector");
+        selector.innerHTML =
+          '<option value="">-- Selecione um militar para editar os dados --</option>';
+        const sortedForDropdown = [...allReportsData].sort((a, b) =>
+          (a.nome_completo || "").localeCompare(b.nome_completo || "")
+        );
+        sortedForDropdown.forEach((report) => {
+          const option = document.createElement("option");
+          option.value = report.id;
+          option.textContent = `${report.nome_completo} (Nº PM: ${
+            report.numero_pm || "N/A"
+          })`;
+          selector.appendChild(option);
+        });
+      }
+
+      async function initializeApp() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/config`);
+          if (!response.ok)
+            throw new Error("Falha ao buscar configuração do servidor.");
+          formConfig = await response.json();
+          renderDispensas();
+          renderAdaptacao();
+          renderReportFilters();
+          renderQuickFilters();
+          await fetchAllReports();
+          populateEditDropdown();
+        } catch (error) {
+          console.error("Erro Crítico:", error);
+          document.getElementById(
+            "content-form"
+          ).innerHTML = `<p class="col-span-full text-center text-red-500 font-bold p-8">ERRO CRÍTICO: Não foi possível carregar a configuração do formulário. A aplicação não pode continuar.</p>`;
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        initializeApp();
+
+        const tabs = {
+          form: {
+            tab: document.getElementById("tab-form"),
+            content: document.getElementById("content-form"),
+          },
+          table: {
+            tab: document.getElementById("tab-table"),
+            content: document.getElementById("content-table"),
+          },
+          report: {
+            tab: document.getElementById("tab-report"),
+            content: document.getElementById("content-report"),
+          },
+          spreadsheet: {
+            tab: document.getElementById("tab-spreadsheet"),
+            content: document.getElementById("content-spreadsheet"),
+          },
+          physical: {
+            tab: document.getElementById("tab-physical-report"),
+            content: document.getElementById("content-physical-report"),
+          },
+        };
+
+        const cardsContainer = document.getElementById("cards-container");
+        const spreadsheetHead = document.querySelector(
+          "#spreadsheet-table thead"
+        );
+        const spreadsheetBody = document.getElementById("spreadsheet-body");
+        const quickFiltersContainer = document.getElementById(
+          "quick-filters-container"
+        );
+
+        function switchTab(tabId) {
+          Object.values(tabs).forEach((item) => {
+            item.tab.classList.remove("nav-tab-active");
+            item.content.classList.add("hidden");
+          });
+          tabs[tabId].tab.classList.add("nav-tab-active");
+          tabs[tabId].content.classList.remove("hidden");
+        }
+
+        tabs.form.tab.addEventListener("click", () => switchTab("form"));
+        tabs.report.tab.addEventListener("click", () => switchTab("report"));
+
+        tabs.table.tab.addEventListener("click", async () => {
+          switchTab("table");
+          cardsContainer.innerHTML = '<div class="loader"></div>';
+          await fetchAllReports();
+          renderReportCards(allReportsData);
+        });
+
+        tabs.spreadsheet.tab.addEventListener("click", async () => {
+          switchTab("spreadsheet");
+          spreadsheetBody.innerHTML = `<tr><td colspan="5"><div class="loader"></div></td></tr>`;
+          await fetchAllReports();
+          filterSpreadsheet();
+        });
+
+        tabs.physical.tab.addEventListener("click", async () => {
+          switchTab("physical");
+          const container = document.getElementById(
+            "physical-report-container"
+          );
+          container.innerHTML = '<div class="loader col-span-full"></div>';
+          try {
+            const response = await fetch(
+              `${API_BASE_URL}/relatorio-aptidao-fisica`
+            );
+            if (!response.ok)
+              throw new Error("Falha ao buscar dados do relatório.");
+            const data = await response.json();
+            renderPhysicalReport(data);
+          } catch (error) {
+            console.error("Erro ao gerar relatório físico:", error);
+            container.innerHTML = `<p class="text-red-600 col-span-full">Erro ao carregar o relatório: ${error.message}</p>`;
+          }
+        });
+
+        document
+          .getElementById("filter-btn")
+          .addEventListener("click", filterReports);
+        document
+          .getElementById("search-input")
+          .addEventListener("keyup", (event) => {
+            if (event.key === "Enter") filterReports();
+          });
+        document
+          .getElementById("reset-btn")
+          .addEventListener("click", handleFormReset);
+        document
+          .getElementById("edit-selector")
+          .addEventListener("change", (e) => {
+            const reportId = e.target.value;
+            if (reportId) {
+              const reportData = allReportsData.find((r) => r.id == reportId);
+              populateFormForEditing(reportData);
+            } else {
+              handleFormReset();
+            }
+          });
+
+        cardsContainer.addEventListener("click", async (e) => {
+          if (e.target.classList.contains("edit-btn")) {
+            const reportId = e.target.dataset.id;
+            const reportData = allReportsData.find((r) => r.id == reportId);
+            if (reportData) {
+              populateFormForEditing(reportData);
+              document.getElementById("edit-selector").value = reportId;
+            }
+          }
+          if (e.target.classList.contains("delete-btn")) {
+            const reportId = e.target.dataset.id;
+            const report = allReportsData.find((r) => r.id == reportId);
+            if (
+              confirm(
+                `Tem certeza que deseja excluir o relatório de "${report.nome_completo}"? Esta ação não pode ser desfeita.`
+              )
+            ) {
+              try {
+                const response = await fetch(
+                  `${API_BASE_URL}/excluir-relatorio/${reportId}`,
+                  { method: "DELETE" }
+                );
+                const result = await response.json();
+                if (!response.ok)
+                  throw new Error(result.message || "Erro ao excluir.");
+                alert(result.message);
+                await fetchAllReports();
+                renderReportCards(allReportsData);
+                populateEditDropdown();
+                filterSpreadsheet();
+              } catch (error) {
+                console.error("Erro ao excluir:", error);
+                alert(`Falha ao excluir o relatório: ${error.message}`);
+              }
+            }
+          }
+        });
+
+        spreadsheetHead.addEventListener("click", (e) => {
+          const header = e.target.closest("th");
+          if (header && header.dataset.key) {
+            sortData(header.dataset.key);
+          }
+        });
+
+        spreadsheetBody.addEventListener("click", (e) => {
+          const row = e.target.closest("tr");
+          if (!row || !row.dataset.id) return;
+          const reportId = row.dataset.id;
+          const reportData = allReportsData.find((r) => r.id == reportId);
+          if (reportData) {
+            populateFormForEditing(reportData);
+            document.getElementById("edit-selector").value = reportId;
+          }
+        });
+
+        quickFiltersContainer.addEventListener("click", (e) => {
+          if (e.target.tagName === "BUTTON") {
+            const groupName = e.target.dataset.group;
+            const filtersToSelect = quickFilterGroups[groupName];
+            const allCheckboxes = document.querySelectorAll(
+              '#report-filters-container input[type="checkbox"]'
+            );
+            allCheckboxes.forEach((cb) => (cb.checked = false));
+            if (filtersToSelect) {
+              filtersToSelect.forEach((filterText) => {
+                const checkbox = document.querySelector(
+                  `#report-filters-container input[value="${filterText}"]`
+                );
+                if (checkbox) {
+                  checkbox.checked = true;
+                }
+              });
+            }
+          }
+        });
+
+        document
+          .getElementById("spreadsheet-search-input")
+          .addEventListener("keyup", filterSpreadsheet);
+
+        document
+          .getElementById("generate-report-btn")
+          .addEventListener("click", async () => {
+            const selectedFilters = [];
+            document
+              .querySelectorAll(
+                '#report-filters-container input[type="checkbox"]:checked'
+              )
+              .forEach((checkbox) => {
+                selectedFilters.push(checkbox.value);
+              });
+            if (selectedFilters.length === 0) {
+              alert(
+                "Por favor, selecione pelo menos um critério para gerar o relatório."
+              );
+              return;
+            }
+            const resultsContainer = document.getElementById(
+              "report-results-container"
+            );
+            const reportBtn = document.getElementById("generate-report-btn");
+            resultsContainer.innerHTML = '<div class="loader"></div>';
+            reportBtn.disabled = true;
+            reportBtn.textContent = "Gerando...";
+            try {
+              const response = await fetch(
+                `${API_BASE_URL}/gerar-relatorio-grupo`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ filtros: selectedFilters }),
+                }
+              );
+              const result = await response.json();
+              if (!response.ok) throw new Error(result.error);
+              resultsContainer.innerHTML = "";
+              const gridDiv = document.createElement("div");
+              gridDiv.className =
+                "grid grid-cols-1 md:grid-cols-2 gap-8 border-t pt-6";
+              const aptosDiv = document.createElement("div");
+              aptosDiv.innerHTML = `<h3 class="text-xl font-semibold text-green-600 mb-4">✔️ APTOS para a Missão (${result.aptos.length})</h3>`;
+              if (result.aptos.length > 0) {
+                const list = document.createElement("ul");
+                list.className = "list-disc list-inside space-y-1";
+                result.aptos.forEach((militar) => {
+                  const item = document.createElement("li");
+                  item.className = "text-gray-800";
+                  item.textContent = `${militar.nome_completo} (Nº PM: ${
+                    militar.numero_pm || "N/A"
+                  })`;
+                  list.appendChild(item);
+                });
+                aptosDiv.appendChild(list);
+              } else {
+                aptosDiv.innerHTML +=
+                  '<p class="text-slate-500">Nenhum militar totalmente apto para todos os critérios selecionados.</p>';
+              }
+              const inaptosDiv = document.createElement("div");
+              inaptosDiv.innerHTML = `<h3 class="text-xl font-semibold text-red-600 mb-4">❌ COM RESTRIÇÕES para a Missão (${result.inaptos.length})</h3>`;
+              if (result.inaptos.length > 0) {
+                const list = document.createElement("ul");
+                list.className = "list-disc list-inside space-y-1";
+                result.inaptos.forEach((militar) => {
+                  const item = document.createElement("li");
+                  item.className = "text-gray-800";
+                  item.textContent = `${militar.nome_completo} (Nº PM: ${
+                    militar.numero_pm || "N/A"
+                  })`;
+                  list.appendChild(item);
+                });
+                inaptosDiv.appendChild(list);
+              } else {
+                inaptosDiv.innerHTML +=
+                  '<p class="text-slate-500">Nenhum militar encontrado com as restrições selecionadas.</p>';
+              }
+              gridDiv.appendChild(aptosDiv);
+              gridDiv.appendChild(inaptosDiv);
+              resultsContainer.appendChild(gridDiv);
+            } catch (error) {
+              console.error("Erro ao gerar relatório:", error);
+              resultsContainer.innerHTML = `<p class="text-red-600">Falha ao gerar relatório: ${error.message}</p>`;
+            } finally {
+              reportBtn.disabled = false;
+              reportBtn.textContent = "Gerar Listas";
+            }
+          });
+
+        document
+          .getElementById("save-db-btn")
+          .addEventListener("click", async (e) => {
+            const saveBtn = e.target;
+            const editingId = document.getElementById("editing-id").value;
+            const nomeMilitarInput = document.getElementById("nome_completo");
+            if (!nomeMilitarInput.value.trim()) {
+              alert(
+                "Por favor, preencha o Nome Completo do militar antes de salvar."
+              );
+              nomeMilitarInput.focus();
+              return;
+            }
+            const relatorioData = collectDataForDB();
+            const url = editingId
+              ? `${API_BASE_URL}/atualizar-relatorio/${editingId}`
+              : `${API_BASE_URL}/salvar-relatorio`;
+            const method = editingId ? "PUT" : "POST";
+            saveBtn.disabled = true;
+            saveBtn.textContent = "Salvando...";
+            try {
+              const response = await fetch(url, {
+                method: method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(relatorioData),
+              });
+              const result = await response.json();
+              if (!response.ok)
+                throw new Error(
+                  result.error || "Ocorreu um erro desconhecido."
+                );
+              alert(result.message);
+              handleFormReset();
+              await fetchAllReports();
+              populateEditDropdown();
+              tabs.table.tab.click();
+            } catch (error) {
+              console.error("Erro ao salvar no banco de dados:", error);
+              alert(
+                `Falha ao salvar no banco de dados: ${error.message}. Verifique o console do servidor.`
+              );
+            } finally {
+              saveBtn.disabled = false;
+              saveBtn.textContent = "Salvar no Banco de Dados";
+            }
+          });
+      });
+    </script>
+  </body>
+</html>
