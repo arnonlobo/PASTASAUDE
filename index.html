@@ -6,6 +6,139 @@
     <title>Painel de Aptidão Militar</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+      /* Adicione este CSS dentro da sua tag <style> */
+
+      .info-icon {
+        display: inline-block;
+        position: relative;
+        margin-left: 8px;
+        cursor: pointer;
+        color: #64748b; /* slate-500 */
+        font-weight: bold;
+        border: 1px solid #cbd5e1; /* slate-300 */
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        text-align: center;
+        line-height: 18px;
+        font-style: normal;
+      }
+
+      .tooltip {
+        visibility: hidden;
+        width: 300px;
+        background-color: #1e293b; /* slate-800 */
+        color: #fff;
+        text-align: left;
+        border-radius: 6px;
+        padding: 10px;
+        position: absolute;
+        z-index: 10;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -150px; /* Metade da largura */
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 0.8rem;
+        font-weight: normal;
+        line-height: 1.4;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .tooltip::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #1e293b transparent transparent transparent;
+      }
+
+      .info-icon:hover .tooltip {
+        visibility: visible;
+        opacity: 1;
+      }
+
+      .tooltip ul {
+        list-style-position: inside;
+        padding-left: 5px;
+      }
+      /* Adicione este CSS dentro da sua tag <style> */
+      .filter-badge-btn {
+        cursor: pointer;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px; /* pill shape */
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+        border: 2px solid transparent;
+      }
+
+      .filter-badge-btn.active {
+        transform: scale(1.05);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .filter-badge-btn:not(.active):hover {
+        opacity: 0.85;
+      }
+
+      .bg-membro-superior {
+        background-color: #dbeafe;
+        color: #1e40af;
+        border-color: #93c5fd;
+      }
+      .bg-membro-superior.active {
+        background-color: #3b82f6;
+        color: white;
+        border-color: #1d4ed8;
+      }
+
+      .bg-membro-inferior {
+        background-color: #ffedd5;
+        color: #9a3412;
+        border-color: #fdba74;
+      }
+      .bg-membro-inferior.active {
+        background-color: #f97316;
+        color: white;
+        border-color: #c2410c;
+      }
+
+      .bg-corrida {
+        background-color: #e0e7ff;
+        color: #4338ca;
+        border-color: #a5b4fc;
+      }
+      .bg-corrida.active {
+        background-color: #6366f1;
+        color: white;
+        border-color: #4338ca;
+      }
+
+      .bg-servico-noturno {
+        background-color: #e5e7eb;
+        color: #374151;
+        border-color: #9ca3af;
+      }
+      .bg-servico-noturno.active {
+        background-color: #4b5563;
+        color: white;
+        border-color: #1f2937;
+      }
+
+      .bg-reset {
+        background-color: #fecaca;
+        color: #991b1b;
+        border-color: #f87171;
+      }
+      .bg-reset.active {
+        background-color: #dc2626;
+        color: white;
+        border-color: #991b1b;
+      }
       .status-btn {
         cursor: pointer;
         padding: 0.5rem 1rem;
@@ -123,6 +256,7 @@
         <div id="tab-report" class="nav-tab">Gerador de Relatórios</div>
         <div id="tab-spreadsheet" class="nav-tab">Planilha Geral</div>
         <div id="tab-physical-report" class="nav-tab">Relatório Físico</div>
+        <div id="tab-copia" class="nav-tab">Relatório para Cópia</div>
       </nav>
 
       <main id="content-form">
@@ -245,14 +379,16 @@
                 placeholder="Buscar por Nome ou Nº PM..."
                 class="p-2 border rounded-md focus:ring-2 focus:ring-blue-500 w-full md:w-auto"
               />
-              <button
-                id="filter-btn"
-                class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded"
-              >
-                Filtrar
-              </button>
             </div>
           </div>
+
+          <div
+            id="badge-filters-container"
+            class="flex flex-wrap justify-center gap-4 mb-6 pb-6 border-b"
+          >
+            <div class="loader"></div>
+          </div>
+
           <div
             id="cards-container"
             class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
@@ -342,58 +478,159 @@
           </div>
         </section>
       </main>
-    </div>
 
+      <main id="content-copia" class="hidden">
+        <section class="bg-white p-6 rounded-lg shadow-md">
+          <div class="flex justify-between items-center border-b pb-2 mb-4">
+            <h2 class="text-2xl font-bold text-slate-700">
+              Relatório de Texto para Cópia
+            </h2>
+            <button
+              id="copy-report-btn"
+              class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg"
+            >
+              Copiar Relatório
+            </button>
+          </div>
+          <p class="text-sm text-slate-500 mb-6">
+            Relatório completo de todos os militares formatado para fácil cópia
+            e colagem em outros documentos.
+          </p>
+
+          <fieldset class="mb-4 p-4 border rounded bg-slate-50">
+            <legend class="font-semibold px-2">
+              Opções de Visualização do Relatório
+            </legend>
+            <div
+              class="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2 text-sm"
+            >
+              <div>
+                <input
+                  type="checkbox"
+                  id="ocultar-ordem-unida"
+                  name="ocultar-ordem-unida"
+                />
+                <label for="ocultar-ordem-unida">Ocultar "Ordem Unida"</label>
+              </div>
+              <div>
+                <input
+                  type="checkbox"
+                  id="ocultar-defesa-pessoal"
+                  name="ocultar-defesa-pessoal"
+                />
+                <label for="ocultar-defesa-pessoal"
+                  >Ocultar "Defesa Pessoal"</label
+                >
+              </div>
+              <div>
+                <input
+                  type="checkbox"
+                  id="ocultar-tecnica-policial"
+                  name="ocultar-tecnica-policial"
+                />
+                <label for="ocultar-tecnica-policial"
+                  >Ocultar "Téc. Policial"</label
+                >
+              </div>
+              <div>
+                <input
+                  type="checkbox"
+                  id="ocultar-ed-fisica"
+                  name="ocultar-ed-fisica"
+                />
+                <label for="ocultar-ed-fisica">Ocultar "Educação Física"</label>
+              </div>
+              <div>
+                <input
+                  type="checkbox"
+                  id="ocultar-armamento-tiro"
+                  name="ocultar-armamento-tiro"
+                />
+                <label for="ocultar-armamento-tiro"
+                  >Ocultar "Armamento e Tiro"</label
+                >
+              </div>
+              <div>
+                <input
+                  type="checkbox"
+                  id="ocultar-estagio"
+                  name="ocultar-estagio"
+                />
+                <label for="ocultar-estagio"
+                  >Ocultar "Estágio Supervisionado"</label
+                >
+              </div>
+            </div>
+          </fieldset>
+          <div class="text-center mb-4">
+            <button
+              id="update-report-btn"
+              class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg"
+            >
+              Atualizar Relatório
+            </button>
+          </div>
+
+          <div
+            id="report-copia-container"
+            class="space-y-4 bg-slate-50 p-4 rounded border font-sans text-sm overflow-auto max-h-screen"
+          >
+            <div class="loader"></div>
+          </div>
+        </section>
+      </main>
+    </div>
     <script>
       // --- VARIÁVEIS GLOBAIS ---
       let formConfig = null;
       let allReportsData = [];
+      let criteriosConfig = null;
       const API_BASE_URL = "http://localhost:3000/api";
       let currentSort = {
         key: "nome_completo",
         direction: "asc",
       };
+      let activeBadgeFilter = null;
+
       const quickFilterGroups = {
         "Corrida / Marcha": [
+          "Atividades de impacto: corrida",
           "Policiamento externo a pé",
-          "Atividades de impacto: a) corrida",
-          "Maneabilidade",
         ],
         "Membros Superiores": [
+          "Atividades de impacto: flexão e barra (membro superior)",
           "Atividades com levantamento de material pesado",
-          "Atividades de impacto: b) flexão e barra (membro superior)",
-          "Defesa pessoal",
           "Uso e manuseio de armamento",
           "Combate a incêndio",
+          "Defesa pessoal",
         ],
         "Membros Inferiores": [
-          "Policiamento externo a pé",
-          "Atividades de impacto: a) corrida",
+          "Atividades de impacto: corrida",
           "Atividades de impacto: outros",
-          "Defesa pessoal",
-          "Maneabilidade",
-          "Equitação",
+          "Policiamento externo a pé",
         ],
-        Abdominal: [
-          "Atividades de impacto: c) flexão abdominal",
-          "Defesa pessoal",
-          "Atividades com levantamento de material pesado",
-        ],
+        Abdominal: ["Atividades de impacto: flexão abdominal"],
         "Geral (Físico Intenso)": [
           "Atividade física: terrestre",
           "Atividade física: em altura",
           "Atividade física: aquática",
           "Defesa pessoal",
           "Esportes coletivos",
-          "Atividades de impacto: a) corrida",
-          "Atividades de impacto: b) flexão e barra (membro superior)",
-          "Atividades de impacto: c) flexão abdominal",
         ],
       };
 
-      // --- FUNÇÕES DE LÓGICA E RENDERIZAÇÃO ---
+      // --- DEFINIÇÃO DE TODAS AS FUNÇÕES ---
       const toSqlName = (text, prefix = "") =>
         `${prefix}${text}`.replace(/[^a-zA-Z0-9_]/g, "_");
+
+      function createCriteriaTooltip(key) {
+        if (!criteriosConfig || !criteriosConfig[key]) return "";
+        const criteria = criteriosConfig[key];
+        const descriptionItems = criteria.descricao
+          .map((item) => `<li>${item}</li>`)
+          .join("");
+        return `<i class="info-icon">i<span class="tooltip"><strong>Critérios para "${criteria.label}":</strong><ul>${descriptionItems}</ul></span></i>`;
+      }
 
       function createItemRow(prefix, text, id, category, defaultStatus) {
         const isDispensa = category === "dispensas";
@@ -477,6 +714,272 @@
           );
           categoryDiv.appendChild(itemsContainer);
           container.appendChild(categoryDiv);
+        });
+      }
+
+      function renderBadgeFilters() {
+        const container = document.getElementById("badge-filters-container");
+        container.innerHTML = "";
+        if (!allReportsData || allReportsData.length === 0) return;
+        const counts = {
+          membro_superior: allReportsData.filter(
+            (r) => r.status_membro_superior === "INAPTO"
+          ).length,
+          membro_inferior: allReportsData.filter(
+            (r) => r.status_membro_inferior === "INAPTO"
+          ).length,
+          corrida: allReportsData.filter((r) => r.status_corrida === "INAPTO")
+            .length,
+          servico_noturno: allReportsData.filter(
+            (r) => r.status_servico_noturno === "INAPTO"
+          ).length,
+        };
+        container.innerHTML = `
+        <button class="filter-badge-btn bg-membro-superior" data-filter="membro_superior">❌ Membro Superior (${
+          counts.membro_superior
+        })${createCriteriaTooltip("membro_superior")}</button>
+        <button class="filter-badge-btn bg-membro-inferior" data-filter="membro_inferior">❌ Membro Inferior (${
+          counts.membro_inferior
+        })${createCriteriaTooltip("membro_inferior")}</button>
+        <button class="filter-badge-btn bg-corrida" data-filter="corrida">❌ Corrida (${
+          counts.corrida
+        })${createCriteriaTooltip("corrida")}</button>
+        <button class="filter-badge-btn bg-servico-noturno" data-filter="servico_noturno">❌ Serviço Noturno (${
+          counts.servico_noturno
+        })${createCriteriaTooltip("servico_noturno")}</button>
+        <button class="filter-badge-btn bg-reset" data-filter="reset">Mostrar Todos (${
+          allReportsData.length
+        })</button>
+    `;
+      }
+
+      function filterAndRenderReports() {
+        const searchTerm = document
+          .getElementById("search-input")
+          .value.toLowerCase();
+        let filteredData = [...allReportsData];
+        if (searchTerm) {
+          filteredData = filteredData.filter(
+            (report) =>
+              (report.nome_completo || "").toLowerCase().includes(searchTerm) ||
+              (report.numero_pm || "").toLowerCase().includes(searchTerm)
+          );
+        }
+        if (activeBadgeFilter) {
+          const statusKey = `status_${activeBadgeFilter}`;
+          filteredData = filteredData.filter(
+            (report) => report[statusKey] === "INAPTO"
+          );
+        }
+        renderReportCards(filteredData);
+      }
+
+      function renderReportCards(dataToRender) {
+        const cardsContainer = document.getElementById("cards-container");
+        cardsContainer.innerHTML = "";
+        if (!formConfig) {
+          cardsContainer.innerHTML =
+            '<p class="col-span-full text-center text-red-500">Aguardando configuração do formulário...</p>';
+          return;
+        }
+        if (dataToRender.length === 0) {
+          cardsContainer.innerHTML =
+            '<p class="col-span-full text-center text-slate-500">Nenhum resultado encontrado para os filtros aplicados.</p>';
+          return;
+        }
+        dataToRender.forEach((report) => {
+          const card = document.createElement("div");
+          card.className = "card p-6 space-y-2 flex flex-col";
+          let statusBadges = '<div class="flex flex-wrap gap-2 mt-2 mb-2">';
+          if (report.status_membro_superior === "APTO") {
+            statusBadges +=
+              '<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-green-600 bg-green-200">💪 Membro Superior</span>';
+          } else if (report.status_membro_superior === "INAPTO") {
+            statusBadges +=
+              '<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-red-800 bg-red-200">❌ Membro Superior</span>';
+          }
+          if (report.status_membro_inferior === "APTO") {
+            statusBadges +=
+              '<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-orange-600 bg-orange-200">🦵 Membro Inferior</span>';
+          } else if (report.status_membro_inferior === "INAPTO") {
+            statusBadges +=
+              '<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-red-800 bg-red-200">❌ Membro Inferior</span>';
+          }
+          if (report.status_corrida === "APTO") {
+            statusBadges +=
+              '<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-600 bg-blue-200">🏃 Corrida</span>';
+          } else if (report.status_corrida === "INAPTO") {
+            statusBadges +=
+              '<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-red-800 bg-red-200">❌ Corrida</span>';
+          }
+          if (report.status_servico_noturno === "APTO") {
+            statusBadges +=
+              '<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-indigo-600 bg-indigo-200">🌙 Serviço Noturno</span>';
+          } else if (report.status_servico_noturno === "INAPTO") {
+            statusBadges +=
+              '<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-red-800 bg-red-200">❌ Serviço Noturno</span>';
+          }
+          statusBadges += "</div>";
+          const hasBadges = statusBadges.includes("<span");
+          let dispensasList = "";
+          formConfig.dispensasGerais.forEach((item) => {
+            if (report[toSqlName(item.text, "disp_")] === "SIM") {
+              dispensasList += `<li class="text-red-600">${item.text}</li>`;
+            }
+          });
+          let aptidoesHtml = "";
+          Object.keys(formConfig.adaptacaoPedagogica).forEach(
+            (categoryName) => {
+              let categoryAptidoes = "";
+              formConfig.adaptacaoPedagogica[categoryName].forEach(
+                (itemText) => {
+                  if (
+                    report[
+                      toSqlName(`${categoryName}_${itemText}`, "apto_")
+                    ] === "SIM"
+                  ) {
+                    categoryAptidoes += `<li class="text-green-600">${itemText}</li>`;
+                  }
+                }
+              );
+              if (categoryAptidoes) {
+                aptidoesHtml += `<details class="mt-2"><summary class="font-semibold text-slate-600">${categoryName}</summary><ul class="list-disc list-inside pl-4 mt-1 text-sm">${categoryAptidoes}</ul></details>`;
+              }
+            }
+          );
+          card.innerHTML = `<div class="flex justify-between items-start"><div><h3 class="font-bold text-xl text-slate-800">${
+            report.nome_completo || "N/A"
+          }</h3><p class="text-sm text-slate-500">Nº PM: ${
+            report.numero_pm || "N/A"
+          } | Unidade: ${
+            report.unidade_origem || "N/A"
+          }</p><p class="text-xs text-slate-400">Ata JCS: ${
+            report.ata_jcs || "N/A"
+          }</p></div></div> ${
+            hasBadges ? statusBadges : ""
+          } <div class="flex-grow space-y-2 mt-4 border-t pt-4"><details><summary class="text-red-700">Dispensas</summary><ul class="list-disc list-inside mt-2 text-sm">${
+            dispensasList || "<li>Nenhuma dispensa registrada.</li>"
+          }</ul></details><details><summary class="text-green-700">Aptidões</summary>${
+            aptidoesHtml ||
+            '<p class="text-sm mt-2">Nenhuma aptidão registrada.</p>'
+          }</details></div><div class="flex justify-end gap-2 mt-4 pt-4 border-t"><button class="edit-btn bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-3 rounded text-sm" data-id="${
+            report.id
+          }">Editar</button><button class="delete-btn bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm" data-id="${
+            report.id
+          }">Excluir</button></div>`;
+          cardsContainer.appendChild(card);
+        });
+      }
+
+      async function fetchAllReports() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/get-relatorios`);
+          if (!response.ok)
+            throw new Error("Falha ao buscar dados do servidor.");
+          const result = await response.json();
+          allReportsData = result.data;
+          allReportsData.sort((a, b) => {
+            const valA = a[currentSort.key] || "";
+            const valB = b[currentSort.key] || "";
+            const comparison = valA.localeCompare(valB, "pt-BR", {
+              numeric: true,
+            });
+            return currentSort.direction === "asc" ? comparison : -comparison;
+          });
+          return allReportsData;
+        } catch (error) {
+          console.error("Erro ao carregar relatórios:", error);
+          alert(
+            "Não foi possível carregar os relatórios. Verifique o console para mais detalhes."
+          );
+          return [];
+        }
+      }
+
+      function handleFormReset() {
+        document
+          .getElementById("dados-pessoais")
+          .querySelectorAll('input[type="text"]')
+          .forEach((input) => (input.value = ""));
+        document.getElementById("editing-id").value = "";
+        document.getElementById("edit-selector").value = "";
+        document
+          .querySelectorAll("#dispensas-container .status-btn")
+          .forEach((btn) => {
+            if (btn.dataset.status === "negativo") btn.click();
+          });
+        document
+          .querySelectorAll("#adaptacao-container .status-btn")
+          .forEach((btn) => {
+            if (btn.dataset.status === "positivo") btn.click();
+          });
+        document.getElementById("nome_completo").focus();
+      }
+
+      function populateFormForEditing(report) {
+        if (!report) {
+          handleFormReset();
+          return;
+        }
+        document.getElementById("editing-id").value = report.id;
+        [
+          "nome_completo",
+          "numero_pm",
+          "unidade_origem",
+          "unidade_nais_sas",
+          "ata_jcs",
+        ].forEach((id) => {
+          document.getElementById(id).value = report[id] || "";
+        });
+        formConfig.dispensasGerais.forEach((item) => {
+          const colName = toSqlName(item.text, "disp_");
+          const btn = document.querySelector(
+            `#dispensas-container [data-text="${item.text}"]`
+          );
+          if (!btn) return;
+          const isDispensado = report[colName] === "SIM";
+          if (
+            (isDispensado && btn.dataset.status === "positivo") ||
+            (!isDispensado && btn.dataset.status === "negativo")
+          ) {
+            btn.click();
+          }
+        });
+        Object.keys(formConfig.adaptacaoPedagogica).forEach((categoryName) => {
+          formConfig.adaptacaoPedagogica[categoryName].forEach(
+            (itemText, itemIndex) => {
+              const colName = toSqlName(`${categoryName}_${itemText}`, "apto_");
+              const btnId = `adaptacao-${toSqlName(categoryName)}-${itemIndex}`;
+              const btn = document.getElementById(btnId);
+              if (!btn) return;
+              const isApto = report[colName] === "SIM";
+              if (
+                (isApto && btn.dataset.status === "negativo") ||
+                (!isApto && btn.dataset.status === "positivo")
+              ) {
+                btn.click();
+              }
+            }
+          );
+        });
+        document.getElementById("tab-form").click();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function populateEditDropdown() {
+        const selector = document.getElementById("edit-selector");
+        selector.innerHTML =
+          '<option value="">-- Selecione um militar para editar os dados --</option>';
+        const sortedForDropdown = [...allReportsData].sort((a, b) =>
+          (a.nome_completo || "").localeCompare(b.nome_completo || "")
+        );
+        sortedForDropdown.forEach((report) => {
+          const option = document.createElement("option");
+          option.value = report.id;
+          option.textContent = `${report.nome_completo} (Nº PM: ${
+            report.numero_pm || "N/A"
+          })`;
+          selector.appendChild(option);
         });
       }
 
@@ -585,11 +1088,8 @@
           columnsToShow.forEach((col) => {
             const td = document.createElement("td");
             td.className = "p-3";
-            if (col.key === "#") {
-              td.textContent = index + 1;
-            } else {
-              td.textContent = report[col.key] || "";
-            }
+            td.textContent =
+              col.key === "#" ? index + 1 : report[col.key] || "";
             row.appendChild(td);
           });
           tableBody.appendChild(row);
@@ -604,27 +1104,33 @@
             '<p class="text-slate-500 col-span-full">Não foi possível gerar o relatório.</p>';
           return;
         }
+        const keyMap = {
+          "Aptos para Corrida": "corrida",
+          "Restrição para Membros Superiores": "membro_superior",
+          "Restrição para Membros Inferiores": "membro_inferior",
+          "Inapto para Serviço Noturno": "servico_noturno",
+        };
         for (const groupName in data) {
           const groupData = data[groupName];
-          const isRestrictionGroup = groupName
-            .toLowerCase()
-            .includes("restrição");
-
+          const isRestrictionGroup =
+            groupName.toLowerCase().includes("restrição") ||
+            groupName.toLowerCase().includes("inapto");
           const sectionDiv = document.createElement("div");
           sectionDiv.className = "bg-slate-50 p-4 rounded-lg border";
-
           const title = document.createElement("h3");
-          title.className = "text-lg font-bold text-slate-800 mb-3";
-
+          title.className =
+            "text-lg font-bold text-slate-800 mb-3 flex items-center";
+          const criteriaKey = keyMap[groupName];
+          const tooltipHtml = criteriaKey
+            ? createCriteriaTooltip(criteriaKey)
+            : "";
           if (isRestrictionGroup) {
-            title.innerHTML = `❌ ${groupName} <span class="text-red-600 font-semibold">(${groupData.length})</span>`;
+            title.innerHTML = `❌ ${groupName} <span class="text-red-600 font-semibold ml-2">(${groupData.length})</span> ${tooltipHtml}`;
           } else {
             const cleanGroupName = groupName.replace("Aptos para ", "");
-            title.innerHTML = `✔️ Aptos para ${cleanGroupName} <span class="text-green-600 font-semibold">(${groupData.length})</span>`;
+            title.innerHTML = `✔️ Aptos para ${cleanGroupName} <span class="text-green-600 font-semibold ml-2">(${groupData.length})</span> ${tooltipHtml}`;
           }
-
           sectionDiv.appendChild(title);
-
           if (groupData.length > 0) {
             const list = document.createElement("ul");
             list.className = "list-disc list-inside space-y-1 text-sm";
@@ -638,7 +1144,7 @@
             });
             sectionDiv.appendChild(list);
           } else {
-            noDataText = document.createElement("p");
+            const noDataText = document.createElement("p");
             noDataText.className = "text-sm text-slate-500";
             noDataText.textContent = isRestrictionGroup
               ? "Nenhum militar com esta restrição."
@@ -647,6 +1153,597 @@
           }
           container.appendChild(sectionDiv);
         }
+      }
+
+      function renderCopyReport(dataToRender) {
+        const container = document.getElementById("report-copia-container");
+        container.innerHTML = "";
+
+        if (!formConfig || !dataToRender || dataToRender.length === 0) {
+          container.innerHTML =
+            '<p class="text-slate-500">Nenhum militar encontrado para gerar o relatório.</p>';
+          return;
+        }
+
+        // Objeto com as regras de agrupamento que estava faltando
+        const groupingRules = {
+          dispensas: {
+            Policiamento: [
+              { full: "Policiamento externo armado", short: "externo armado" },
+              {
+                full: "Policiamento externo desarmado",
+                short: "externo desarmado",
+              },
+              { full: "Policiamento externo a pé", short: "externo a pé" },
+              {
+                full: "Policiamento em meio de transporte",
+                short: "em transporte",
+              },
+              { full: "Policiamento interno armado", short: "interno armado" },
+              {
+                full: "Policiamento interno desarmado",
+                short: "interno desarmado",
+              },
+              { full: "Policiamento velado armado", short: "velado armado" },
+              {
+                full: "Policiamento velado desarmado",
+                short: "velado desarmado",
+              },
+            ],
+            "Capacitação Operacional": [
+              { full: "Maneabilidade", short: "maneabilidade" },
+              { full: "Ordem unida", short: "ordem unida" },
+              { full: "Defesa pessoal", short: "defesa pessoal" },
+              { full: "Tiro", short: "tiro" },
+              {
+                full: "Uso e manuseio de armamento",
+                short: "uso de armamento",
+              },
+            ],
+            "Busca e Salvamento": [
+              {
+                full: "Busca e salvamento: terrestre e subterrâneo",
+                short: "terrestre/subterrâneo",
+              },
+              {
+                full: "Busca e salvamento: aéreo e em altura",
+                short: "aéreo/altura",
+              },
+              { full: "Busca e salvamento: aquático", short: "aquático" },
+            ],
+            "Atividades de Incêndio": [
+              { full: "Combate a incêndio", short: "combate a incêndio" },
+              { full: "Prevenção de incêndio", short: "prevenção de incêndio" },
+            ],
+            "Condução de Viatura": [
+              {
+                full: "Condução de viatura policial caracterizada",
+                short: "caracterizada",
+              },
+              {
+                full: "Condução de viatura descaracterizada",
+                short: "descaracterizada",
+              },
+            ],
+            "Atividades de Alto Impacto": [
+              { full: "Atividades de impacto: corrida", short: "corrida" },
+              {
+                full: "Atividades de impacto: flexão e barra (membro superior)",
+                short: "flexão/barra",
+              },
+              {
+                full: "Atividades de impacto: flexão abdominal",
+                short: "abdominal",
+              },
+              { full: "Atividades de impacto: outros", short: "outros" },
+            ],
+            "Atividade Física (Geral)": [
+              { full: "Atividade física: terrestre", short: "terrestre" },
+              { full: "Atividade física: em altura", short: "em altura" },
+              { full: "Atividade física: aquática", short: "aquática" },
+            ],
+            "Uso de Fardamento": [
+              {
+                full: "Uso de fardamento interno, exceto agasalho",
+                short: "interno",
+              },
+              { full: "Uso de fardamento externo", short: "externo" },
+              {
+                full: "Uso de itens de fardamento: cobertura",
+                short: "cobertura",
+              },
+              {
+                full: "Uso de itens de fardamento: coturno e equivalentes",
+                short: "coturno",
+              },
+              {
+                full: "Uso de itens de fardamento: calçado fechado rígido",
+                short: "calçado rígido",
+              },
+            ],
+          },
+          aptidoes: {
+            "Ordem Unida": [
+              {
+                full: "Executar movimentos de ordem unida a pé firme desarmados",
+                short: "mov. a pé firme (desarmado)",
+              },
+              {
+                full: "Executar movimentos de ordem unida a pé firme armados",
+                short: "mov. a pé firme (armado)",
+              },
+              {
+                full: "Executar movimentos de ordem unida em deslocamento desarmados",
+                short: "mov. em deslocamento (desarmado)",
+              },
+              {
+                full: "Executar movimentos de ordem unida em deslocamento armados",
+                short: "mov. em deslocamento (armado)",
+              },
+              { full: "Executar comandos de voz", short: "comandos de voz" },
+              {
+                full: "Executar comandos de gesto",
+                short: "comandos de gesto",
+              },
+              {
+                full: "Ministrar instrução teórica",
+                short: "instrução teórica",
+              },
+            ],
+            "Defesa Pessoal": [
+              {
+                full: "Executar posturas defensivas",
+                short: "posturas defensivas",
+              },
+              {
+                full: "Executar posicionamentos para abordagens",
+                short: "posicionamentos",
+              },
+              {
+                full: "Executar técnicas de esquivas contra golpes",
+                short: "esquivas",
+              },
+              { full: "Executar agachamento", short: "agachamento" },
+              { full: "Executar rolamento", short: "rolamento" },
+              { full: "Executar flexão", short: "flexão" },
+              {
+                full: "Executar técnicas de manutenção de distância de agressor",
+                short: "manutenção de distância",
+              },
+              {
+                full: "Executar técnicas de forçamento de articulações (punho, cotovelo, ombro)",
+                short: "forçamento de articulações",
+              },
+              {
+                full: "Executar técnicas de defesa utilizando membros superiores",
+                short: "defesa (MMSS)",
+              },
+              {
+                full: "Executar técnicas de defesa utilizando membros inferiores",
+                short: "defesa (MMII)",
+              },
+              {
+                full: "Executar técnicas de ataque utilizando membros superiores",
+                short: "ataque (MMSS)",
+              },
+              {
+                full: "Executar técnicas de ataque utilizando membros inferiores",
+                short: "ataque (MMII)",
+              },
+              { full: "Executar abdominais", short: "abdominais" },
+              {
+                full: "Executar defesa contra agarramentos: gola, pescoço e punho",
+                short: "defesa contra agarramentos",
+              },
+              {
+                full: "Executar técnicas de imobilizações em decúbito ventral",
+                short: "imobilizações (ventral)",
+              },
+              {
+                full: "Executar técnicas de queda e imobilizações de solo",
+                short: "imobilizações (solo)",
+              },
+              {
+                full: "Sofrer técnicas de queda e imobilizações de solo",
+                short: "sofrer quedas/imobilizações",
+              },
+              {
+                full: 'Executar técnicas de "quebra de resistência" e defesa contra agressores desarmados',
+                short: "quebra de resistência",
+              },
+              {
+                full: "Executar técnicas de forçamento de articulações e imobilizações",
+                short: "forçamento e imobilizações",
+              },
+              {
+                full: "Executar técnicas de algemação e condução com as mãos livres",
+                short: "algemação e condução",
+              },
+              {
+                full: "Executar posições de alongamento e aquecimento com forçamento moderado",
+                short: "alongamento/aquecimento",
+              },
+              {
+                full: "Executar corrida moderada de aquecimento",
+                short: "corrida de aquecimento",
+              },
+              {
+                full: "Executar técnicas de porte, saque e empunhadura de tonfa",
+                short: "técnicas de tonfa",
+              },
+              {
+                full: "Executar movimentos de ataque e defesa com tonfa/bastão",
+                short: "ataque/defesa com tonfa",
+              },
+              {
+                full: "Executar como forma pedagógica o movimento contrário",
+                short: "executar movimento contrário",
+              },
+            ],
+            "Técnica Policial Militar": [
+              {
+                full: "Utilizar arma de fogo desmuniciada",
+                short: "usar arma desmuniciada",
+              },
+              {
+                full: "Utilizar arma de fogo com festim",
+                short: "usar arma com festim",
+              },
+              {
+                full: "Executar abordagem a pessoa suspeita",
+                short: "abordagem a pessoa",
+              },
+              { full: "Realizar busca pessoal", short: "busca pessoal" },
+              { full: "Sofrer busca pessoal", short: "sofrer busca pessoal" },
+              { full: "Abordagem a veículos", short: "abordagem a veículos" },
+              { full: "Executar escolta policial", short: "escolta policial" },
+            ],
+            "Educação Física": [
+              { full: "Corrida 2.400m", short: "corrida 2.400m" },
+              { full: "Corrida 200 m", short: "corrida 200m" },
+              { full: "Flexão Abdominal", short: "flexão abdominal" },
+              { full: "Flexão Barra", short: "flexão barra" },
+              { full: "Barra fixa- feminina", short: "barra fixa (fem.)" },
+              { full: "Caminhadas", short: "caminhadas" },
+              {
+                full: "Treinamento para corridas",
+                short: "treino para corrida",
+              },
+              {
+                full: "Treinamento para abdominais",
+                short: "treino para abdominal",
+              },
+              { full: "Treinamento para barra", short: "treino para barra" },
+              {
+                full: "Treinamento de agilidade",
+                short: "treino de agilidade",
+              },
+              {
+                full: "Treinamento de impulsão vertical",
+                short: "treino de impulsão",
+              },
+              {
+                full: "Treinamento de ritmo aeróbico",
+                short: "treino aeróbico",
+              },
+              {
+                full: "Treinamento de resistência muscular dorsal",
+                short: "treino de resistência (dorsal)",
+              },
+              {
+                full: "Treinamento de resistência muscular dos membros superiores",
+                short: "treino de resistência (MMSS)",
+              },
+              {
+                full: "Treinamento de resistência muscular dos membros inferiores",
+                short: "treino de resistência (MMII)",
+              },
+              { full: "Treinamento anaeróbico", short: "treino anaeróbico" },
+            ],
+            "Armamento e Tiro": [
+              {
+                full: "Manusear arma de fogo desmuniciada",
+                short: "manuseio (desmuniciada)",
+              },
+              {
+                full: "Manusear arma de fogo municiada com munição de manejo",
+                short: "manuseio (munição de manejo)",
+              },
+              {
+                full: "Desmontar e montar armas",
+                short: "desmontagem/montagem",
+              },
+              {
+                full: "Realizar tiro em pé com arma de porte",
+                short: "tiro em pé (porte)",
+              },
+              {
+                full: "Realizar tiro na posição sentada sobre as próprias pernas com arma de porte",
+                short: "tiro sentado (porte)",
+              },
+              {
+                full: "Realizar tiro na posição de joelhos com arma de porte",
+                short: "tiro de joelhos (porte)",
+              },
+              {
+                full: "Realizar tiro na posição deitada com arma de porte",
+                short: "tiro deitado (porte)",
+              },
+              {
+                full: "Realizar tiro em pé com arma portátil",
+                short: "tiro em pé (portátil)",
+              },
+              {
+                full: "Realizar tiro na posição sentada sobre as próprias pernas com arma portátil",
+                short: "tiro sentado (portátil)",
+              },
+              {
+                full: "Realizar tiro na posição de joelhos com arma portátil",
+                short: "tiro de joelhos (portátil)",
+              },
+              {
+                full: "Realizar tiro na posição deitada com arma portátil",
+                short: "tiro deitado (portátil)",
+              },
+              {
+                full: "Realizar tiro de arma portátil no modo rajada",
+                short: "tiro em rajada (portátil)",
+              },
+              {
+                full: "Realizar tiro em pé com arma de porte partindo de barricada",
+                short: "tiro barricado em pé (porte)",
+              },
+              {
+                full: "Realizar tiro na posição sentada sobre as próprias pernas com arma de porte partindo de barricada",
+                short: "tiro barricado sentado (porte)",
+              },
+              {
+                full: "Realizar tiro na posição de joelhos com arma de porte partindo de barricada",
+                short: "tiro barricado de joelhos (porte)",
+              },
+              {
+                full: "Realizar tiro na posição deitada com arma de porte partindo de barricada",
+                short: "tiro barricado deitado (porte)",
+              },
+              {
+                full: "Realizar tiro em pé com arma portátil partindo de barricada",
+                short: "tiro barricado em pé (portátil)",
+              },
+              {
+                full: "Realizar tiro na posição sentada sobre as próprias pernas com arma portátil partindo de barricada",
+                short: "tiro barricado sentado (portátil)",
+              },
+              {
+                full: "Realizar tiro na posição de joelhos com arma portátil partindo de barricada",
+                short: "tiro barricado de joelhos (portátil)",
+              },
+              {
+                full: "Realizar tiro na posição deitada com arma portátil partindo de barricada",
+                short: "tiro barricado deitado (portátil)",
+              },
+              {
+                full: "Uso de itens de fardamento: Máscara de Proteção Respiratória",
+                short: "uso de máscara",
+              },
+              {
+                full: "Uso de itens de fardamento: Colete balístico",
+                short: "uso de colete",
+              },
+              {
+                full: "Uso de itens de fardamento: Escudo balístico",
+                short: "uso de escudo",
+              },
+              {
+                full: "Uso de itens de fardamento: Capacete balístico",
+                short: "uso de capacete",
+              },
+              {
+                full: "Manusear Espargidores e granadas de mão",
+                short: "manuseio de espargidores/granadas",
+              },
+              {
+                full: "Lançar Espargidores e granadas de mão",
+                short: "lançamento de espargidores/granadas",
+              },
+              {
+                full: "Manusear Armas de Impulso Elétrico",
+                short: "manuseio de arma de impulso elétrico",
+              },
+              {
+                full: "Utilizar Armas de Impulso Elétrico",
+                short: "uso de arma de impulso elétrico",
+              },
+            ],
+            "Estágio Supervisionado": [
+              { full: "Sentinela interno armado", short: "sentinela (armado)" },
+              {
+                full: "Sentinela interno desarmado",
+                short: "sentinela (desarmado)",
+              },
+              {
+                full: "Auxiliar sala de armas",
+                short: "auxiliar sala de armas",
+              },
+              {
+                full: "Auxiliar de Seção de Transporte",
+                short: "auxiliar de transporte",
+              },
+              { full: "Auxiliar no Olho Vivo", short: "auxiliar Olho Vivo" },
+              { full: "Auxiliar na Recepção", short: "auxiliar de recepção" },
+              {
+                full: "Policiamento externo a pé",
+                short: "policiamento externo a pé",
+              },
+              {
+                full: "Policiamento interno a pé",
+                short: "policiamento interno a pé",
+              },
+              { full: "Fardar uniforme B1", short: "fardar B1" },
+              { full: "Fardar uniforme C1", short: "fardar C1" },
+              {
+                full: "Uniformizar com D2 (agasalho de educação física)",
+                short: "uniformizar D2",
+              },
+              {
+                full: "Policiamento Externo - viatura",
+                short: "policiamento em viatura",
+              },
+              { full: "Sargenteação", short: "sargenteação" },
+              { full: "Operador da SOU", short: "operador SOU" },
+              {
+                full: "Atividade de Rádio Patrulhamento",
+                short: "rádio patrulhamento",
+              },
+              {
+                full: "Prática do comando de guarnição de rádio patrulhamento",
+                short: "comando de guarnição rádio",
+              },
+              {
+                full: "Prática do comando de guarnição motorizada de 4 rodas",
+                short: "comando de guarnição 4 rodas",
+              },
+              {
+                full: "Atividade de Patrulha de Operações (POP)",
+                short: "atividade POP",
+              },
+              {
+                full: "Atividade de Grupo Especializado em Policiamento em Áreas de Risco (GEPAR)",
+                short: "atividade GEPAR",
+              },
+              {
+                full: "Coordenador Sala de Armas",
+                short: "coordenador sala de armas",
+              },
+            ],
+          },
+        };
+
+        const processAndGroupItems = (report, config, type) => {
+          const ocultarOrdemUnida = document.getElementById(
+            "ocultar-ordem-unida"
+          )?.checked;
+          const ocultarDefesaPessoal = document.getElementById(
+            "ocultar-defesa-pessoal"
+          )?.checked;
+          const ocultarTecnicaPolicial = document.getElementById(
+            "ocultar-tecnica-policial"
+          )?.checked;
+          const ocultarEdFisica =
+            document.getElementById("ocultar-ed-fisica")?.checked;
+          const ocultarArmamentoTiro = document.getElementById(
+            "ocultar-armamento-tiro"
+          )?.checked;
+          const ocultarEstagio =
+            document.getElementById("ocultar-estagio")?.checked;
+
+          const groups = {};
+          const standaloneItems = [];
+          const rules = groupingRules[type];
+          const itemsToProcess = [];
+
+          if (type === "dispensas") {
+            config.forEach((item) => itemsToProcess.push({ text: item.text }));
+          } else {
+            Object.keys(config).forEach((category) => {
+              config[category].forEach((text) =>
+                itemsToProcess.push({ text, category })
+              );
+            });
+          }
+
+          itemsToProcess.forEach((item) => {
+            const colName =
+              type === "dispensas"
+                ? toSqlName(item.text, "disp_")
+                : toSqlName(`${item.category}_${item.text}`, "apto_");
+            if (report[colName] === "SIM") {
+              let itemWasGrouped = false;
+              for (const groupName in rules) {
+                const rule = rules[groupName].find((r) => r.full === item.text);
+                if (rule) {
+                  if (!groups[groupName]) {
+                    groups[groupName] = [];
+                  }
+                  groups[groupName].push(rule.short);
+                  itemWasGrouped = true;
+                  break;
+                }
+              }
+              if (!itemWasGrouped) {
+                standaloneItems.push(item.text);
+              }
+            }
+          });
+
+          const formattedParts = [];
+          const sortedGroupNames = Object.keys(groups).sort();
+
+          for (const groupName of sortedGroupNames) {
+            if (
+              (ocultarOrdemUnida && groupName === "Ordem Unida") ||
+              (ocultarDefesaPessoal && groupName === "Defesa Pessoal") ||
+              (ocultarTecnicaPolicial &&
+                groupName === "Técnica Policial Militar") ||
+              (ocultarArmamentoTiro && groupName === "Armamento e Tiro") ||
+              (ocultarEdFisica && groupName === "Educação Física") ||
+              (ocultarEstagio && groupName === "Estágio Supervisionado")
+            ) {
+              continue;
+            }
+
+            if (groups[groupName].length > 0) {
+              formattedParts.push(
+                `<strong>${groupName}</strong> (${groups[groupName].join(
+                  ", "
+                )})`
+              );
+            }
+          }
+
+          const allParts = [...formattedParts, ...standaloneItems];
+          if (type === "dispensas")
+            return allParts.length > 0
+              ? allParts.join("; ")
+              : "Nenhuma dispensa registrada.";
+          return allParts.length > 0
+            ? allParts.join("; ")
+            : "Nenhuma aptidão específica registrada.";
+        };
+
+        dataToRender.forEach((report, index) => {
+          const dispensasText = processAndGroupItems(
+            report,
+            formConfig.dispensasGerais,
+            "dispensas"
+          );
+          const aptidoesText = processAndGroupItems(
+            report,
+            formConfig.adaptacaoPedagogica,
+            "aptidoes"
+          );
+
+          const table = document.createElement("table");
+          table.className =
+            "min-w-full border border-slate-300 border-collapse mb-4";
+          const tbody = document.createElement("tbody");
+          tbody.innerHTML = `
+      <tr class="bg-slate-200">
+          <td class="p-2 border border-slate-300 font-bold text-slate-800">${
+            index + 1
+          }. ${report.nome_completo || "N/A"}</td>
+          <td class="p-2 border border-slate-300 font-semibold text-slate-700">${
+            report.numero_pm || "N/A"
+          }</td>
+          <td class="p-2 border border-slate-300 text-center font-semibold text-slate-600 w-16">${
+            report.unidade_nais_sas || "N/A"
+          }</td>
+      </tr>
+      <tr><td colspan="3" class="p-2 border border-slate-300 align-top"><strong class="text-red-700">Dispensado de:</strong> ${dispensasText}</td></tr>
+      <tr><td colspan="3" class="p-2 border border-slate-300 align-top"><strong class="text-green-700">Pode executar:</strong> ${aptidoesText}</td></tr>
+    `;
+          table.appendChild(tbody);
+          container.appendChild(table);
+        });
       }
 
       function sortData(key) {
@@ -672,16 +1769,12 @@
         const searchTerm = document
           .getElementById("spreadsheet-search-input")
           .value.toLowerCase();
-        const filteredData = allReportsData.filter((report) => {
-          const nome = (report.nome_completo || "").toLowerCase();
-          const numero = (report.numero_pm || "").toLowerCase();
-          const unidade = (report.unidade_origem || "").toLowerCase();
-          return (
-            nome.includes(searchTerm) ||
-            numero.includes(searchTerm) ||
-            unidade.includes(searchTerm)
-          );
-        });
+        const filteredData = allReportsData.filter(
+          (report) =>
+            (report.nome_completo || "").toLowerCase().includes(searchTerm) ||
+            (report.numero_pm || "").toLowerCase().includes(searchTerm) ||
+            (report.unidade_origem || "").toLowerCase().includes(searchTerm)
+        );
         renderSpreadsheet(filteredData);
       }
 
@@ -720,201 +1813,20 @@
         return data;
       }
 
-      function renderReportCards(dataToRender) {
-        const cardsContainer = document.getElementById("cards-container");
-        cardsContainer.innerHTML = "";
-        if (!formConfig) {
-          cardsContainer.innerHTML =
-            '<p class="col-span-full text-center text-red-500">Aguardando configuração do formulário...</p>';
-          return;
-        }
-        if (dataToRender.length === 0) {
-          cardsContainer.innerHTML =
-            '<p class="col-span-full text-center text-slate-500">Nenhum resultado encontrado.</p>';
-          return;
-        }
-        dataToRender.forEach((report) => {
-          const card = document.createElement("div");
-          card.className = "card p-6 space-y-2 flex flex-col";
-          let dispensasList = "";
-          formConfig.dispensasGerais.forEach((item) => {
-            const colName = toSqlName(item.text, "disp_");
-            if (report[colName] === "SIM") {
-              dispensasList += `<li class="text-red-600">${item.text}</li>`;
-            }
-          });
-          let aptidoesHtml = "";
-          Object.keys(formConfig.adaptacaoPedagogica).forEach(
-            (categoryName) => {
-              let categoryAptidoes = "";
-              formConfig.adaptacaoPedagogica[categoryName].forEach(
-                (itemText) => {
-                  const colName = toSqlName(
-                    `${categoryName}_${itemText}`,
-                    "apto_"
-                  );
-                  if (report[colName] === "SIM") {
-                    categoryAptidoes += `<li class="text-green-600">${itemText}</li>`;
-                  }
-                }
-              );
-              if (categoryAptidoes) {
-                aptidoesHtml += `<details class="mt-2"><summary class="font-semibold text-slate-600">${categoryName}</summary><ul class="list-disc list-inside pl-4 mt-1 text-sm">${categoryAptidoes}</ul></details>`;
-              }
-            }
-          );
-          card.innerHTML = `<div class="flex justify-between items-start"><div><h3 class="font-bold text-xl text-slate-800">${
-            report.nome_completo || "N/A"
-          }</h3><p class="text-sm text-slate-500">Nº PM: ${
-            report.numero_pm || "N/A"
-          } | Unidade: ${
-            report.unidade_origem || "N/A"
-          }</p><p class="text-xs text-slate-400">Ata JCS: ${
-            report.ata_jcs || "N/A"
-          }</p></div></div><div class="flex-grow space-y-2 mt-4"><details><summary class="text-red-700">Dispensas</summary><ul class="list-disc list-inside mt-2 text-sm">${
-            dispensasList || "<li>Nenhuma dispensa registrada.</li>"
-          }</ul></details><details><summary class="text-green-700">Aptidões</summary>${
-            aptidoesHtml ||
-            '<p class="text-sm mt-2">Nenhuma aptidão registrada.</p>'
-          }</details></div><div class="flex justify-end gap-2 mt-4 pt-4 border-t"><button class="edit-btn bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-3 rounded text-sm" data-id="${
-            report.id
-          }">Editar</button><button class="delete-btn bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm" data-id="${
-            report.id
-          }">Excluir</button></div>`;
-          cardsContainer.appendChild(card);
-        });
-      }
-
-      async function fetchAllReports() {
-        try {
-          const response = await fetch(`${API_BASE_URL}/get-relatorios`);
-          if (!response.ok)
-            throw new Error("Falha ao buscar dados do servidor.");
-          const result = await response.json();
-          allReportsData = result.data;
-          allReportsData.sort((a, b) => {
-            const valA = a[currentSort.key] || "";
-            const valB = b[currentSort.key] || "";
-            const comparison = valA.localeCompare(valB, "pt-BR", {
-              numeric: true,
-            });
-            return currentSort.direction === "asc" ? comparison : -comparison;
-          });
-          return allReportsData;
-        } catch (error) {
-          console.error("Erro ao carregar relatórios:", error);
-          alert(
-            "Não foi possível carregar os relatórios. Verifique o console para mais detalhes."
-          );
-          return [];
-        }
-      }
-
-      function filterReports() {
-        const searchTerm = document
-          .getElementById("search-input")
-          .value.toLowerCase();
-        const filteredData = allReportsData.filter((report) => {
-          const nome = (report.nome_completo || "").toLowerCase();
-          const numero = (report.numero_pm || "").toLowerCase();
-          return nome.includes(searchTerm) || numero.includes(searchTerm);
-        });
-        renderReportCards(filteredData);
-      }
-
-      function populateFormForEditing(report) {
-        if (!report) {
-          handleFormReset();
-          return;
-        }
-        document.getElementById("editing-id").value = report.id;
-        [
-          "nome_completo",
-          "numero_pm",
-          "unidade_origem",
-          "unidade_nais_sas",
-          "ata_jcs",
-        ].forEach((id) => {
-          document.getElementById(id).value = report[id] || "";
-        });
-        formConfig.dispensasGerais.forEach((item) => {
-          const colName = toSqlName(item.text, "disp_");
-          const btn = document.querySelector(
-            `#dispensas-container [data-text="${item.text}"]`
-          );
-          if (!btn) return;
-          const isDispensado = report[colName] === "SIM";
-          if (
-            (isDispensado && btn.dataset.status === "positivo") ||
-            (!isDispensado && btn.dataset.status === "negativo")
-          ) {
-            btn.click();
-          }
-        });
-        Object.keys(formConfig.adaptacaoPedagogica).forEach((categoryName) => {
-          formConfig.adaptacaoPedagogica[categoryName].forEach(
-            (itemText, itemIndex) => {
-              const colName = toSqlName(`${categoryName}_${itemText}`, "apto_");
-              const btnId = `adaptacao-${toSqlName(categoryName)}-${itemIndex}`;
-              const btn = document.getElementById(btnId);
-              if (!btn) return;
-              const isApto = report[colName] === "SIM";
-              if (
-                (isApto && btn.dataset.status === "negativo") ||
-                (!isApto && btn.dataset.status === "positivo")
-              ) {
-                btn.click();
-              }
-            }
-          );
-        });
-        document.getElementById("tab-form").click();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-
-      function handleFormReset() {
-        document
-          .getElementById("dados-pessoais")
-          .querySelectorAll('input[type="text"]')
-          .forEach((input) => (input.value = ""));
-        document.getElementById("editing-id").value = "";
-        document.getElementById("edit-selector").value = "";
-        document
-          .querySelectorAll("#dispensas-container .status-btn")
-          .forEach((btn) => {
-            if (btn.dataset.status === "negativo") btn.click();
-          });
-        document
-          .querySelectorAll("#adaptacao-container .status-btn")
-          .forEach((btn) => {
-            if (btn.dataset.status === "positivo") btn.click();
-          });
-        document.getElementById("nome_completo").focus();
-      }
-
-      function populateEditDropdown() {
-        const selector = document.getElementById("edit-selector");
-        selector.innerHTML =
-          '<option value="">-- Selecione um militar para editar os dados --</option>';
-        const sortedForDropdown = [...allReportsData].sort((a, b) =>
-          (a.nome_completo || "").localeCompare(b.nome_completo || "")
-        );
-        sortedForDropdown.forEach((report) => {
-          const option = document.createElement("option");
-          option.value = report.id;
-          option.textContent = `${report.nome_completo} (Nº PM: ${
-            report.numero_pm || "N/A"
-          })`;
-          selector.appendChild(option);
-        });
-      }
-
       async function initializeApp() {
         try {
-          const response = await fetch(`${API_BASE_URL}/config`);
-          if (!response.ok)
-            throw new Error("Falha ao buscar configuração do servidor.");
-          formConfig = await response.json();
+          const [formRes, criteriosRes] = await Promise.all([
+            fetch(`${API_BASE_URL}/config`),
+            fetch(`${API_BASE_URL}/config/criterios`),
+          ]);
+          if (!formRes.ok)
+            throw new Error("Falha ao buscar configuração do formulário.");
+          if (!criteriosRes.ok)
+            throw new Error("Falha ao buscar configuração dos critérios.");
+
+          formConfig = await formRes.json();
+          criteriosConfig = await criteriosRes.json();
+
           renderDispensas();
           renderAdaptacao();
           renderReportFilters();
@@ -925,7 +1837,7 @@
           console.error("Erro Crítico:", error);
           document.getElementById(
             "content-form"
-          ).innerHTML = `<p class="col-span-full text-center text-red-500 font-bold p-8">ERRO CRÍTICO: Não foi possível carregar a configuração do formulário. A aplicação não pode continuar.</p>`;
+          ).innerHTML = `<p class="col-span-full text-center text-red-500 font-bold p-8">ERRO CRÍTICO: ${error.message}</p>`;
         }
       }
 
@@ -953,16 +1865,11 @@
             tab: document.getElementById("tab-physical-report"),
             content: document.getElementById("content-physical-report"),
           },
+          copia: {
+            tab: document.getElementById("tab-copia"),
+            content: document.getElementById("content-copia"),
+          },
         };
-
-        const cardsContainer = document.getElementById("cards-container");
-        const spreadsheetHead = document.querySelector(
-          "#spreadsheet-table thead"
-        );
-        const spreadsheetBody = document.getElementById("spreadsheet-body");
-        const quickFiltersContainer = document.getElementById(
-          "quick-filters-container"
-        );
 
         function switchTab(tabId) {
           Object.values(tabs).forEach((item) => {
@@ -973,171 +1880,209 @@
           tabs[tabId].content.classList.remove("hidden");
         }
 
-        tabs.form.tab.addEventListener("click", () => switchTab("form"));
-        tabs.report.tab.addEventListener("click", () => switchTab("report"));
-
-        tabs.table.tab.addEventListener("click", async () => {
-          switchTab("table");
-          cardsContainer.innerHTML = '<div class="loader"></div>';
-          await fetchAllReports();
-          renderReportCards(allReportsData);
-        });
-
-        tabs.spreadsheet.tab.addEventListener("click", async () => {
-          switchTab("spreadsheet");
-          spreadsheetBody.innerHTML = `<tr><td colspan="5"><div class="loader"></div></td></tr>`;
-          await fetchAllReports();
-          filterSpreadsheet();
-        });
-
-        tabs.physical.tab.addEventListener("click", async () => {
-          switchTab("physical");
-          const container = document.getElementById(
-            "physical-report-container"
-          );
-          container.innerHTML = '<div class="loader col-span-full"></div>';
-          try {
-            const response = await fetch(
-              `${API_BASE_URL}/relatorio-aptidao-fisica`
-            );
-            if (!response.ok)
-              throw new Error("Falha ao buscar dados do relatório.");
-            const data = await response.json();
-            renderPhysicalReport(data);
-          } catch (error) {
-            console.error("Erro ao gerar relatório físico:", error);
-            container.innerHTML = `<p class="text-red-600 col-span-full">Erro ao carregar o relatório: ${error.message}</p>`;
-          }
+        Object.keys(tabs).forEach((tabId) => {
+          tabs[tabId].tab.addEventListener("click", async () => {
+            switchTab(tabId);
+            if (tabId === "table") {
+              document.getElementById("cards-container").innerHTML =
+                '<div class="loader"></div>';
+              document.getElementById("badge-filters-container").innerHTML =
+                '<div class="loader"></div>';
+              await fetchAllReports();
+              renderBadgeFilters();
+              filterAndRenderReports();
+            } else if (tabId === "spreadsheet") {
+              document.getElementById(
+                "spreadsheet-body"
+              ).innerHTML = `<tr><td colspan="5"><div class="loader"></div></td></tr>`;
+              await fetchAllReports();
+              filterSpreadsheet();
+            } else if (tabId === "physical") {
+              const container = document.getElementById(
+                "physical-report-container"
+              );
+              container.innerHTML = '<div class="loader col-span-full"></div>';
+              const response = await fetch(
+                `${API_BASE_URL}/relatorio-aptidao-fisica`
+              );
+              const data = await response.json();
+              renderPhysicalReport(data);
+            } else if (tabId === "copia") {
+              const container = document.getElementById(
+                "report-copia-container"
+              );
+              container.innerHTML = '<div class="loader"></div>';
+              await fetchAllReports();
+              renderCopyReport(allReportsData);
+            }
+          });
         });
 
         document
-          .getElementById("filter-btn")
-          .addEventListener("click", filterReports);
+          .getElementById("badge-filters-container")
+          .addEventListener("click", (e) => {
+            const target = e.target.closest(".filter-badge-btn");
+            if (!target) return;
+            const filterType = target.dataset.filter;
+            document
+              .querySelectorAll("#badge-filters-container .filter-badge-btn")
+              .forEach((btn) => btn.classList.remove("active"));
+            if (filterType === "reset") {
+              activeBadgeFilter = null;
+            } else {
+              if (activeBadgeFilter === filterType) {
+                activeBadgeFilter = null;
+              } else {
+                activeBadgeFilter = filterType;
+                target.classList.add("active");
+              }
+            }
+            filterAndRenderReports();
+          });
+
         document
           .getElementById("search-input")
-          .addEventListener("keyup", (event) => {
-            if (event.key === "Enter") filterReports();
-          });
+          .addEventListener("keyup", filterAndRenderReports);
         document
           .getElementById("reset-btn")
           .addEventListener("click", handleFormReset);
         document
+          .getElementById("update-report-btn")
+          .addEventListener("click", () => renderCopyReport(allReportsData));
+
+        document
           .getElementById("edit-selector")
           .addEventListener("change", (e) => {
             const reportId = e.target.value;
-            if (reportId) {
-              const reportData = allReportsData.find((r) => r.id == reportId);
-              populateFormForEditing(reportData);
-            } else {
+            if (!reportId) {
               handleFormReset();
+              return;
+            }
+            const reportData = allReportsData.find((r) => r.id == reportId);
+            populateFormForEditing(reportData);
+          });
+
+        document
+          .getElementById("cards-container")
+          .addEventListener("click", async (e) => {
+            if (e.target.classList.contains("edit-btn")) {
+              const reportId = e.target.dataset.id;
+              const reportData = allReportsData.find((r) => r.id == reportId);
+              if (reportData) {
+                populateFormForEditing(reportData);
+                document.getElementById("edit-selector").value = reportId;
+              }
+            }
+            if (e.target.classList.contains("delete-btn")) {
+              const reportId = e.target.dataset.id;
+              const report = allReportsData.find((r) => r.id == reportId);
+              if (
+                confirm(
+                  `Tem certeza que deseja excluir o relatório de "${report.nome_completo}"?`
+                )
+              ) {
+                try {
+                  await fetch(`${API_BASE_URL}/excluir-relatorio/${reportId}`, {
+                    method: "DELETE",
+                  });
+                  await fetchAllReports();
+                  populateEditDropdown();
+                  renderBadgeFilters();
+                  filterAndRenderReports();
+                } catch (error) {
+                  alert(`Falha ao excluir: ${error.message}`);
+                }
+              }
             }
           });
 
-        cardsContainer.addEventListener("click", async (e) => {
-          if (e.target.classList.contains("edit-btn")) {
-            const reportId = e.target.dataset.id;
+        document
+          .getElementById("save-db-btn")
+          .addEventListener("click", async (e) => {
+            const saveBtn = e.target;
+            saveBtn.disabled = true;
+            saveBtn.textContent = "Salvando...";
+            try {
+              const editingId = document.getElementById("editing-id").value;
+              const relatorioData = collectDataForDB();
+              if (!relatorioData.dados_pessoais.nome_completo.trim()) {
+                alert("O nome completo é obrigatório.");
+                throw new Error("Nome completo vazio.");
+              }
+              const url = editingId
+                ? `${API_BASE_URL}/atualizar-relatorio/${editingId}`
+                : `${API_BASE_URL}/salvar-relatorio`;
+              const method = editingId ? "PUT" : "POST";
+              const response = await fetch(url, {
+                method: method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(relatorioData),
+              });
+              const result = await response.json();
+              if (!response.ok)
+                throw new Error(result.error || "Erro desconhecido.");
+              alert(result.message);
+              handleFormReset();
+              await fetchAllReports();
+              populateEditDropdown();
+              tabs.table.tab.click();
+            } catch (error) {
+              console.error("Erro ao salvar:", error);
+              alert(`Falha ao salvar: ${error.message}`);
+            } finally {
+              saveBtn.disabled = false;
+              saveBtn.textContent = "Salvar no Banco de Dados";
+            }
+          });
+
+        document
+          .getElementById("spreadsheet-search-input")
+          .addEventListener("keyup", filterSpreadsheet);
+        document
+          .querySelector("#spreadsheet-table thead")
+          .addEventListener("click", (e) => {
+            const header = e.target.closest("th");
+            if (header && header.dataset.key) sortData(header.dataset.key);
+          });
+        document
+          .getElementById("spreadsheet-body")
+          .addEventListener("click", (e) => {
+            const row = e.target.closest("tr");
+            if (!row || !row.dataset.id) return;
+            const reportId = row.dataset.id;
             const reportData = allReportsData.find((r) => r.id == reportId);
             if (reportData) {
               populateFormForEditing(reportData);
               document.getElementById("edit-selector").value = reportId;
             }
-          }
-          if (e.target.classList.contains("delete-btn")) {
-            const reportId = e.target.dataset.id;
-            const report = allReportsData.find((r) => r.id == reportId);
-            if (
-              confirm(
-                `Tem certeza que deseja excluir o relatório de "${report.nome_completo}"? Esta ação não pode ser desfeita.`
-              )
-            ) {
-              try {
-                const response = await fetch(
-                  `${API_BASE_URL}/excluir-relatorio/${reportId}`,
-                  { method: "DELETE" }
-                );
-                const result = await response.json();
-                if (!response.ok)
-                  throw new Error(result.message || "Erro ao excluir.");
-                alert(result.message);
-                await fetchAllReports();
-                renderReportCards(allReportsData);
-                populateEditDropdown();
-                filterSpreadsheet();
-              } catch (error) {
-                console.error("Erro ao excluir:", error);
-                alert(`Falha ao excluir o relatório: ${error.message}`);
-              }
-            }
-          }
-        });
-
-        spreadsheetHead.addEventListener("click", (e) => {
-          const header = e.target.closest("th");
-          if (header && header.dataset.key) {
-            sortData(header.dataset.key);
-          }
-        });
-
-        spreadsheetBody.addEventListener("click", (e) => {
-          const row = e.target.closest("tr");
-          if (!row || !row.dataset.id) return;
-          const reportId = row.dataset.id;
-          const reportData = allReportsData.find((r) => r.id == reportId);
-          if (reportData) {
-            populateFormForEditing(reportData);
-            document.getElementById("edit-selector").value = reportId;
-          }
-        });
-
-        quickFiltersContainer.addEventListener("click", (e) => {
-          if (e.target.tagName === "BUTTON") {
-            const groupName = e.target.dataset.group;
-            const filtersToSelect = quickFilterGroups[groupName];
-            const allCheckboxes = document.querySelectorAll(
-              '#report-filters-container input[type="checkbox"]'
-            );
-            allCheckboxes.forEach((cb) => (cb.checked = false));
-            if (filtersToSelect) {
-              filtersToSelect.forEach((filterText) => {
-                const checkbox = document.querySelector(
-                  `#report-filters-container input[value="${filterText}"]`
-                );
-                if (checkbox) {
-                  checkbox.checked = true;
-                }
-              });
-            }
-          }
-        });
-
+          });
         document
-          .getElementById("spreadsheet-search-input")
-          .addEventListener("keyup", filterSpreadsheet);
-
+          .getElementById("copy-report-btn")
+          .addEventListener("click", () => {
+            const container = document.getElementById("report-copia-container");
+            navigator.clipboard.writeText(container.innerText).then(
+              () => {
+                alert("Relatório copiado para a área de transferência!");
+              },
+              () => alert("Falha ao copiar.")
+            );
+          });
         document
           .getElementById("generate-report-btn")
           .addEventListener("click", async () => {
-            const selectedFilters = [];
-            document
-              .querySelectorAll(
+            const selectedFilters = Array.from(
+              document.querySelectorAll(
                 '#report-filters-container input[type="checkbox"]:checked'
               )
-              .forEach((checkbox) => {
-                selectedFilters.push(checkbox.value);
-              });
+            ).map((cb) => cb.value);
             if (selectedFilters.length === 0) {
-              alert(
-                "Por favor, selecione pelo menos um critério para gerar o relatório."
-              );
+              alert("Selecione ao menos um critério.");
               return;
             }
             const resultsContainer = document.getElementById(
               "report-results-container"
             );
-            const reportBtn = document.getElementById("generate-report-btn");
             resultsContainer.innerHTML = '<div class="loader"></div>';
-            reportBtn.disabled = true;
-            reportBtn.textContent = "Gerando...";
             try {
               const response = await fetch(
                 `${API_BASE_URL}/gerar-relatorio-grupo`,
@@ -1149,6 +2094,7 @@
               );
               const result = await response.json();
               if (!response.ok) throw new Error(result.error);
+
               resultsContainer.innerHTML = "";
               const gridDiv = document.createElement("div");
               gridDiv.className =
@@ -1158,93 +2104,40 @@
               if (result.aptos.length > 0) {
                 const list = document.createElement("ul");
                 list.className = "list-disc list-inside space-y-1";
-                result.aptos.forEach((militar) => {
+                result.aptos.forEach((m) => {
                   const item = document.createElement("li");
-                  item.className = "text-gray-800";
-                  item.textContent = `${militar.nome_completo} (Nº PM: ${
-                    militar.numero_pm || "N/A"
+                  item.textContent = `${m.nome_completo} (Nº PM: ${
+                    m.numero_pm || "N/A"
                   })`;
                   list.appendChild(item);
                 });
                 aptosDiv.appendChild(list);
               } else {
                 aptosDiv.innerHTML +=
-                  '<p class="text-slate-500">Nenhum militar totalmente apto para todos os critérios selecionados.</p>';
+                  '<p class="text-slate-500">Nenhum militar totalmente apto.</p>';
               }
               const inaptosDiv = document.createElement("div");
               inaptosDiv.innerHTML = `<h3 class="text-xl font-semibold text-red-600 mb-4">❌ COM RESTRIÇÕES para a Missão (${result.inaptos.length})</h3>`;
               if (result.inaptos.length > 0) {
                 const list = document.createElement("ul");
                 list.className = "list-disc list-inside space-y-1";
-                result.inaptos.forEach((militar) => {
+                result.inaptos.forEach((m) => {
                   const item = document.createElement("li");
-                  item.className = "text-gray-800";
-                  item.textContent = `${militar.nome_completo} (Nº PM: ${
-                    militar.numero_pm || "N/A"
+                  item.textContent = `${m.nome_completo} (Nº PM: ${
+                    m.numero_pm || "N/A"
                   })`;
                   list.appendChild(item);
                 });
                 inaptosDiv.appendChild(list);
               } else {
                 inaptosDiv.innerHTML +=
-                  '<p class="text-slate-500">Nenhum militar encontrado com as restrições selecionadas.</p>';
+                  '<p class="text-slate-500">Nenhum militar com as restrições.</p>';
               }
               gridDiv.appendChild(aptosDiv);
               gridDiv.appendChild(inaptosDiv);
               resultsContainer.appendChild(gridDiv);
             } catch (error) {
-              console.error("Erro ao gerar relatório:", error);
-              resultsContainer.innerHTML = `<p class="text-red-600">Falha ao gerar relatório: ${error.message}</p>`;
-            } finally {
-              reportBtn.disabled = false;
-              reportBtn.textContent = "Gerar Listas";
-            }
-          });
-
-        document
-          .getElementById("save-db-btn")
-          .addEventListener("click", async (e) => {
-            const saveBtn = e.target;
-            const editingId = document.getElementById("editing-id").value;
-            const nomeMilitarInput = document.getElementById("nome_completo");
-            if (!nomeMilitarInput.value.trim()) {
-              alert(
-                "Por favor, preencha o Nome Completo do militar antes de salvar."
-              );
-              nomeMilitarInput.focus();
-              return;
-            }
-            const relatorioData = collectDataForDB();
-            const url = editingId
-              ? `${API_BASE_URL}/atualizar-relatorio/${editingId}`
-              : `${API_BASE_URL}/salvar-relatorio`;
-            const method = editingId ? "PUT" : "POST";
-            saveBtn.disabled = true;
-            saveBtn.textContent = "Salvando...";
-            try {
-              const response = await fetch(url, {
-                method: method,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(relatorioData),
-              });
-              const result = await response.json();
-              if (!response.ok)
-                throw new Error(
-                  result.error || "Ocorreu um erro desconhecido."
-                );
-              alert(result.message);
-              handleFormReset();
-              await fetchAllReports();
-              populateEditDropdown();
-              tabs.table.tab.click();
-            } catch (error) {
-              console.error("Erro ao salvar no banco de dados:", error);
-              alert(
-                `Falha ao salvar no banco de dados: ${error.message}. Verifique o console do servidor.`
-              );
-            } finally {
-              saveBtn.disabled = false;
-              saveBtn.textContent = "Salvar no Banco de Dados";
+              resultsContainer.innerHTML = `<p class="text-red-500">${error.message}</p>`;
             }
           });
       });

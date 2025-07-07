@@ -303,12 +303,69 @@ apiRouter.post("/salvar-relatorio", (req, res) => {
   });
 });
 
+// Em server.js, substitua APENAS esta rota
+
+// Em server.js, substitua APENAS esta rota
+
+// Em server.js, substitua a rota /get-relatorios por esta versão CORRIGIDA
+
+// Em server.js, substitua a rota /get-relatorios por esta versão OBJETIVA E FINAL
+
 apiRouter.get("/get-relatorios", (req, res) => {
-  const sql = "SELECT * FROM relatorios ORDER BY nome_completo ASC";
+  console.log("--- ROTA OBJETIVA E FINAL /get-relatorios ACIONADA ---");
+
+  // Nomes das colunas gerados pela sua função toSqlName
+  const dispensaServicoNoturno = toSqlName("Serviço noturno", "disp_");
+  const dispensaCorrida = toSqlName("Atividades de impacto: corrida", "disp_");
+  const dispensaMembroSuperior = toSqlName(
+    "Atividades de impacto: flexão e barra (membro superior)",
+    "disp_"
+  );
+  // Importante: Este vem da Adaptação Pedagógica (Educação Física)
+  const aptidaoMembroInferior = toSqlName(
+    "4. Educação Física_Treinamento de resistência muscular dos membros inferiores",
+    "apto_"
+  );
+
+  const sql = `
+    SELECT 
+      *,
+      
+      -- 1. Status para Serviço Noturno
+      CASE 
+        WHEN "${dispensaServicoNoturno}" = 'SIM' THEN 'INAPTO'
+        ELSE 'APTO'
+      END as status_servico_noturno,
+
+      -- 2. Status para Corrida
+      CASE
+        WHEN "${dispensaCorrida}" = 'SIM' THEN 'INAPTO'
+        ELSE 'APTO'
+      END as status_corrida,
+
+      -- 3. Status para Membros Superiores
+      CASE
+        WHEN "${dispensaMembroSuperior}" = 'SIM' THEN 'INAPTO'
+        ELSE 'APTO'
+      END as status_membro_superior,
+      
+      -- 4. Status para Membros Inferiores (Lógica Invertida - Baseado em Aptidão)
+      CASE
+        WHEN "${aptidaoMembroInferior}" = 'NAO' THEN 'INAPTO'
+        ELSE 'APTO'
+      END as status_membro_inferior
+
+    FROM relatorios 
+    ORDER BY nome_completo ASC
+  `;
+
   db.all(sql, [], (err, rows) => {
     if (err) {
-      res.status(500).json({ error: err.message });
-      return;
+      console.error(
+        "Erro no banco de dados na rota objetiva e final:",
+        err.message
+      );
+      return res.status(500).json({ error: err.message });
     }
     res.json({
       message: "success",
@@ -467,67 +524,116 @@ apiRouter.post("/gerar-relatorio-grupo", (req, res) => {
     });
 });
 
-apiRouter.get("/relatorio-aptidao-fisica", async (req, res) => {
-  const gruposDeAptidao = {
-    "Aptos para Corrida": [
-      toSqlName("Atividades de impacto: corrida", "disp_"),
-    ],
-    "Aptos para Flexão / Barra": [
-      toSqlName(
-        "Atividades de impacto: flexão e barra (membro superior)",
-        "disp_"
-      ),
-    ],
-    "Aptos para Abdominal": [
-      toSqlName("Atividades de impacto: flexão abdominal", "disp_"),
-    ],
-    "Aptos para Levantamento de Peso": [
-      toSqlName("Atividades com levantamento de material pesado", "disp_"),
-    ],
-    "Restrição Geral para Atividade Física": [
-      toSqlName("Atividade física: terrestre", "disp_"),
-      toSqlName("Atividade física: em altura", "disp_"),
-      toSqlName("Atividade física: aquática", "disp_"),
-      toSqlName("Defesa pessoal", "disp_"),
-      toSqlName("Esportes coletivos", "disp_"),
-    ],
-  };
+// Em server.js, substitua a rota inteira por esta:
 
-  const promises = Object.entries(gruposDeAptidao).map(
-    ([nomeGrupo, colunas]) => {
-      let whereClause;
+apiRouter.get("/relatorio-aptidao-fisica", (req, res) => {
+  try {
+    const gruposDeAptidao = {
+      // REGRA JÁ ESTAVA CORRETA E SIMPLES
+      "Aptos para Corrida": [
+        {
+          column: toSqlName("Atividades de impacto: corrida", "disp_"),
+          value: "NAO",
+        },
+      ],
 
-      if (nomeGrupo.startsWith("Aptos para")) {
-        whereClause = colunas.map((col) => `"${col}" = 'NAO'`).join(" AND ");
-      } else {
-        whereClause = colunas.map((col) => `"${col}" = 'SIM'`).join(" OR ");
-      }
+      // REGRA SIMPLIFICADA
+      "Restrição para Membros Superiores": [
+        {
+          column: toSqlName(
+            "Atividades de impacto: flexão e barra (membro superior)",
+            "disp_"
+          ),
+          value: "SIM", // A única condição agora
+        },
+      ],
 
-      const sql = `SELECT nome_completo, numero_pm FROM relatorios WHERE ${whereClause} ORDER BY nome_completo`;
+      // REGRA SIMPLIFICADA (E CORRIGIDA PARA USAR A LÓGICA DE APTIDÃO)
+      "Restrição para Membros Inferiores": [
+        {
+          column: toSqlName(
+            "4. Educação Física_Treinamento de resistência muscular dos membros inferiores",
+            "apto_"
+          ),
+          value: "NAO", // A única condição agora, baseada em aptidão
+        },
+      ],
 
-      return new Promise((resolve, reject) => {
-        db.all(sql, [], (err, rows) => {
-          if (err) {
-            return reject(err);
+      // REGRA SIMPLIFICADA (lógica E para as 3 dispensas básicas)
+      "Restrição para TAF Básico": [
+        {
+          column: toSqlName("Atividades de impacto: corrida", "disp_"),
+          value: "SIM",
+        },
+        {
+          column: toSqlName("Atividades de impacto: flexão abdominal", "disp_"),
+          value: "SIM",
+        },
+        {
+          column: toSqlName(
+            "Atividades de impacto: flexão e barra (membro superior)",
+            "disp_"
+          ),
+          value: "SIM",
+        },
+      ],
+
+      // REGRA JÁ ESTAVA CORRETA E SIMPLES
+      "Inapto para Serviço Noturno": [
+        { column: toSqlName("Serviço noturno", "disp_"), value: "SIM" },
+      ],
+    };
+
+    const promises = Object.entries(gruposDeAptidao).map(
+      ([nomeGrupo, condicoes]) => {
+        return new Promise((resolve, reject) => {
+          let joinOperator;
+          // A lógica de junção "E" ou "OU" permanece a mesma de antes
+          if (nomeGrupo.startsWith("Aptos para")) {
+            joinOperator = " AND ";
+          } else if (nomeGrupo === "Restrição para TAF Básico") {
+            joinOperator = " AND "; // Precisa ter restrição em TUDO do TAF
+          } else {
+            joinOperator = " OR "; // Basta UMA restrição para ser listado
           }
-          resolve({ grupo: nomeGrupo, militares: rows });
+
+          const whereClause = condicoes
+            .map((cond) => `"${cond.column}" = '${cond.value}'`)
+            .join(joinOperator);
+
+          const sql = `
+            SELECT id, nome_completo, numero_pm
+            FROM relatorios
+            WHERE ${whereClause}
+            ORDER BY nome_completo`;
+
+          db.all(sql, [], (err, rows) => {
+            if (err) {
+              return reject(err);
+            }
+            resolve({ [nomeGrupo]: rows });
+          });
+        });
+      }
+    );
+
+    Promise.all(promises)
+      .then((results) => {
+        const finalReport = results.reduce(
+          (acc, current) => ({ ...acc, ...current }),
+          {}
+        );
+        res.json(finalReport);
+      })
+      .catch((error) => {
+        console.error("Erro ao processar relatório de aptidão:", error);
+        res.status(500).json({
+          error: "Falha ao processar uma ou mais consultas do relatório.",
         });
       });
-    }
-  );
-
-  try {
-    const results = await Promise.all(promises);
-    const responseData = results.reduce((acc, result) => {
-      acc[result.grupo] = result.militares;
-      return acc;
-    }, {});
-    res.json(responseData);
   } catch (error) {
-    console.error("Erro ao gerar relatório de aptidão física:", error.message);
-    res
-      .status(500)
-      .json({ error: "Erro interno do servidor ao gerar relatório." });
+    console.error("Erro na rota /relatorio-aptidao-fisica:", error);
+    res.status(500).json({ error: "Erro interno do servidor." });
   }
 });
 
@@ -536,4 +642,37 @@ app.use(express.static(path.join(__dirname)));
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
+});
+
+// EM SERVER.JS - Adicione este bloco com as outras rotas
+
+// --- FONTE DA VERDADE PARA OS CRITÉRIOS DE FILTRO ---
+const criteriosConfig = {
+  membro_superior: {
+    label: "Restrição para Membros Superiores",
+    descricao: [
+      "O militar possui a dispensa para 'Atividades de impacto: flexão e barra (membro superior)'.",
+    ],
+  },
+  membro_inferior: {
+    label: "Restrição para Membros Inferiores",
+    descricao: [
+      "O militar é considerado INAPTO para 'Treinamento de resistência muscular dos membros inferiores'.",
+    ],
+  },
+  corrida: {
+    label: "Restrição para Corrida",
+    descricao: [
+      "O militar possui a dispensa para 'Atividades de impacto: corrida'.",
+    ],
+  },
+  servico_noturno: {
+    label: "Restrição para Serviço Noturno",
+    descricao: ["O militar possui a dispensa para 'Serviço noturno'."],
+  },
+};
+
+// Nova rota para fornecer a configuração dos critérios ao frontend
+apiRouter.get("/config/criterios", (req, res) => {
+  res.json(criteriosConfig);
 });
