@@ -303,25 +303,13 @@ apiRouter.post("/salvar-relatorio", (req, res) => {
   });
 });
 
-// Em server.js, substitua APENAS esta rota
-
-// Em server.js, substitua APENAS esta rota
-
-// Em server.js, substitua a rota /get-relatorios por esta versão CORRIGIDA
-
-// Em server.js, substitua a rota /get-relatorios por esta versão OBJETIVA E FINAL
-
 apiRouter.get("/get-relatorios", (req, res) => {
-  console.log("--- ROTA OBJETIVA E FINAL /get-relatorios ACIONADA ---");
-
-  // Nomes das colunas gerados pela sua função toSqlName
   const dispensaServicoNoturno = toSqlName("Serviço noturno", "disp_");
   const dispensaCorrida = toSqlName("Atividades de impacto: corrida", "disp_");
   const dispensaMembroSuperior = toSqlName(
     "Atividades de impacto: flexão e barra (membro superior)",
     "disp_"
   );
-  // Importante: Este vem da Adaptação Pedagógica (Educação Física)
   const aptidaoMembroInferior = toSqlName(
     "4. Educação Física_Treinamento de resistência muscular dos membros inferiores",
     "apto_"
@@ -330,41 +318,28 @@ apiRouter.get("/get-relatorios", (req, res) => {
   const sql = `
     SELECT 
       *,
-      
-      -- 1. Status para Serviço Noturno
       CASE 
         WHEN "${dispensaServicoNoturno}" = 'SIM' THEN 'INAPTO'
         ELSE 'APTO'
       END as status_servico_noturno,
-
-      -- 2. Status para Corrida
       CASE
         WHEN "${dispensaCorrida}" = 'SIM' THEN 'INAPTO'
         ELSE 'APTO'
       END as status_corrida,
-
-      -- 3. Status para Membros Superiores
       CASE
         WHEN "${dispensaMembroSuperior}" = 'SIM' THEN 'INAPTO'
         ELSE 'APTO'
       END as status_membro_superior,
-      
-      -- 4. Status para Membros Inferiores (Lógica Invertida - Baseado em Aptidão)
       CASE
         WHEN "${aptidaoMembroInferior}" = 'NAO' THEN 'INAPTO'
         ELSE 'APTO'
       END as status_membro_inferior
-
     FROM relatorios 
     ORDER BY nome_completo ASC
   `;
 
   db.all(sql, [], (err, rows) => {
     if (err) {
-      console.error(
-        "Erro no banco de dados na rota objetiva e final:",
-        err.message
-      );
       return res.status(500).json({ error: err.message });
     }
     res.json({
@@ -410,7 +385,6 @@ apiRouter.put("/atualizar-relatorio/:id", (req, res) => {
 
   db.run(sql, values, function (err) {
     if (err) {
-      console.error("Erro ao atualizar o banco de dados:", err.message);
       return res
         .status(500)
         .json({ error: "Erro interno ao atualizar o banco." });
@@ -432,7 +406,6 @@ apiRouter.delete("/excluir-relatorio/:id", (req, res) => {
 
   db.run(sql, id, function (err) {
     if (err) {
-      console.error("Erro ao excluir do banco de dados:", err.message);
       return res
         .status(500)
         .json({ error: "Erro interno ao excluir do banco." });
@@ -524,42 +497,33 @@ apiRouter.post("/gerar-relatorio-grupo", (req, res) => {
     });
 });
 
-// Em server.js, substitua a rota inteira por esta:
-
 apiRouter.get("/relatorio-aptidao-fisica", (req, res) => {
   try {
     const gruposDeAptidao = {
-      // REGRA JÁ ESTAVA CORRETA E SIMPLES
       "Aptos para Corrida": [
         {
           column: toSqlName("Atividades de impacto: corrida", "disp_"),
           value: "NAO",
         },
       ],
-
-      // REGRA SIMPLIFICADA
       "Restrição para Membros Superiores": [
         {
           column: toSqlName(
             "Atividades de impacto: flexão e barra (membro superior)",
             "disp_"
           ),
-          value: "SIM", // A única condição agora
+          value: "SIM",
         },
       ],
-
-      // REGRA SIMPLIFICADA (E CORRIGIDA PARA USAR A LÓGICA DE APTIDÃO)
       "Restrição para Membros Inferiores": [
         {
           column: toSqlName(
             "4. Educação Física_Treinamento de resistência muscular dos membros inferiores",
             "apto_"
           ),
-          value: "NAO", // A única condição agora, baseada em aptidão
+          value: "NAO",
         },
       ],
-
-      // REGRA SIMPLIFICADA (lógica E para as 3 dispensas básicas)
       "Restrição para TAF Básico": [
         {
           column: toSqlName("Atividades de impacto: corrida", "disp_"),
@@ -577,8 +541,6 @@ apiRouter.get("/relatorio-aptidao-fisica", (req, res) => {
           value: "SIM",
         },
       ],
-
-      // REGRA JÁ ESTAVA CORRETA E SIMPLES
       "Inapto para Serviço Noturno": [
         { column: toSqlName("Serviço noturno", "disp_"), value: "SIM" },
       ],
@@ -588,13 +550,12 @@ apiRouter.get("/relatorio-aptidao-fisica", (req, res) => {
       ([nomeGrupo, condicoes]) => {
         return new Promise((resolve, reject) => {
           let joinOperator;
-          // A lógica de junção "E" ou "OU" permanece a mesma de antes
           if (nomeGrupo.startsWith("Aptos para")) {
             joinOperator = " AND ";
           } else if (nomeGrupo === "Restrição para TAF Básico") {
-            joinOperator = " AND "; // Precisa ter restrição em TUDO do TAF
+            joinOperator = " AND ";
           } else {
-            joinOperator = " OR "; // Basta UMA restrição para ser listado
+            joinOperator = " OR ";
           }
 
           const whereClause = condicoes
@@ -637,16 +598,6 @@ apiRouter.get("/relatorio-aptidao-fisica", (req, res) => {
   }
 });
 
-app.use("/api", apiRouter);
-app.use(express.static(path.join(__dirname)));
-
-app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
-});
-
-// EM SERVER.JS - Adicione este bloco com as outras rotas
-
-// --- FONTE DA VERDADE PARA OS CRITÉRIOS DE FILTRO ---
 const criteriosConfig = {
   membro_superior: {
     label: "Restrição para Membros Superiores",
@@ -672,7 +623,172 @@ const criteriosConfig = {
   },
 };
 
-// Nova rota para fornecer a configuração dos critérios ao frontend
 apiRouter.get("/config/criterios", (req, res) => {
   res.json(criteriosConfig);
+});
+
+// ===================================================================
+// LUGAR CORRETO PARA AS NOVAS ROTAS
+// ===================================================================
+
+apiRouter.post("/gerar-relatorio-classificacao", (req, res) => {
+  const { criterios } = req.body;
+
+  if (!criterios || !Array.isArray(criterios) || criterios.length === 0) {
+    return res.status(400).json({ error: "Nenhum critério foi fornecido." });
+  }
+  if (criterios.length > 5) {
+    return res.status(400).json({
+      error: "Por favor, selecione no máximo 5 critérios para a classificação.",
+    });
+  }
+
+  try {
+    const allKnownColumns = {};
+    formConfig.dispensasGerais.forEach((item) => {
+      allKnownColumns[item.text] = {
+        type: "dispensa",
+        sqlName: toSqlName(item.text, "disp_"),
+      };
+    });
+    Object.keys(formConfig.adaptacaoPedagogica).forEach((category) => {
+      formConfig.adaptacaoPedagogica[category].forEach((itemText) => {
+        const uniqueText = `${category} - ${itemText}`;
+        allKnownColumns[uniqueText] = {
+          type: "aptidao",
+          sqlName: toSqlName(`${category}_${itemText}`, "apto_"),
+        };
+      });
+    });
+
+    const classificationClauses = [];
+    const shortNames = [];
+
+    criterios.forEach((filtro) => {
+      const columnInfo = allKnownColumns[filtro];
+      if (columnInfo) {
+        let shortName = filtro
+          .replace("Atividades de impacto: ", "")
+          .replace("Treinamento de resistência muscular dos ", "");
+        shortName = shortName.charAt(0).toUpperCase() + shortName.slice(1);
+        shortNames.push(shortName);
+
+        if (columnInfo.type === "dispensa") {
+          classificationClauses.push(
+            `CASE WHEN "${columnInfo.sqlName}" = 'NAO' THEN '✔️' ELSE '❌' END`
+          );
+        } else {
+          classificationClauses.push(
+            `CASE WHEN "${columnInfo.sqlName}" = 'SIM' THEN '✔️' ELSE '❌' END`
+          );
+        }
+      }
+    });
+
+    if (classificationClauses.length === 0) {
+      return res.status(400).json({ error: "Critérios inválidos." });
+    }
+
+    const dynamicClassificationGroup =
+      classificationClauses.join(" || ';' || ");
+
+    const sql = `
+      SELECT
+        id, nome_completo, numero_pm,
+        (${dynamicClassificationGroup}) as classification_group
+      FROM relatorios
+    `;
+
+    db.all(sql, [], (err, rows) => {
+      if (err) {
+        return res.status(500).json({ error: "Erro de banco de dados." });
+      }
+      const groupedResults = {};
+      rows.forEach((militar) => {
+        const groupKey = militar.classification_group;
+        if (!groupedResults[groupKey]) {
+          groupedResults[groupKey] = [];
+        }
+        groupedResults[groupKey].push(militar);
+      });
+      res.json({ results: groupedResults, criteriaNames: shortNames });
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Erro interno do servidor." });
+  }
+});
+
+apiRouter.get("/relatorio-corrida-caminhada", (req, res) => {
+  try {
+    const dispensaCorridaCol = toSqlName(
+      "Atividades de impacto: corrida",
+      "disp_"
+    );
+    const aptidaoCaminhadaCol = toSqlName(
+      "4. Educação Física_Caminhadas",
+      "apto_"
+    );
+
+    const sql = `
+      SELECT
+        id, nome_completo, numero_pm,
+        CASE
+          WHEN "${dispensaCorridaCol}" = 'SIM' AND "${aptidaoCaminhadaCol}" = 'NAO'
+            THEN 'NAO_PODE_CORRER_NEM_CAMINHAR'
+          WHEN "${dispensaCorridaCol}" = 'SIM' AND "${aptidaoCaminhadaCol}" = 'SIM'
+            THEN 'NAO_PODE_CORRER_PODE_CAMINHAR'
+          WHEN "${dispensaCorridaCol}" = 'NAO' AND "${aptidaoCaminhadaCol}" = 'SIM'
+            THEN 'PODE_TUDO'
+          ELSE 'OUTROS'
+        END as grupo
+      FROM relatorios
+    `;
+
+    db.all(sql, [], (err, rows) => {
+      if (err) {
+        return res.status(500).json({ error: "Erro de banco de dados." });
+      }
+      const relatorioFinal = {
+        naoPodeCorrer_podeCaminhar: [],
+        naoPodeCorrer_nemCaminhar: [],
+        podeTudo: [],
+        outros: [],
+      };
+      rows.forEach((militar) => {
+        switch (militar.grupo) {
+          case "NAO_PODE_CORRER_PODE_CAMINHAR":
+            relatorioFinal.naoPodeCorrer_podeCaminhar.push(militar);
+            break;
+          case "NAO_PODE_CORRER_NEM_CAMINHAR":
+            relatorioFinal.naoPodeCorrer_nemCaminhar.push(militar);
+            break;
+          case "PODE_TUDO":
+            relatorioFinal.podeTudo.push(militar);
+            break;
+          default:
+            relatorioFinal.outros.push(militar);
+            break;
+        }
+      });
+      for (const key in relatorioFinal) {
+        relatorioFinal[key].sort((a, b) =>
+          a.nome_completo.localeCompare(b.nome_completo)
+        );
+      }
+      res.json(relatorioFinal);
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Erro interno do servidor." });
+  }
+});
+
+// ===================================================================
+// ESTA LINHA CRÍTICA DEVE VIR DEPOIS DE TODAS AS ROTAS
+// ===================================================================
+app.use("/api", apiRouter);
+
+app.use(express.static(path.join(__dirname)));
+
+app.listen(PORT, () => {
+  console.log(`Servidor rodando em http://localhost:${PORT}`);
 });

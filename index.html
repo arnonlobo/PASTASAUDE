@@ -256,6 +256,12 @@
         <div id="tab-report" class="nav-tab">Gerador de Relatórios</div>
         <div id="tab-spreadsheet" class="nav-tab">Planilha Geral</div>
         <div id="tab-physical-report" class="nav-tab">Relatório Físico</div>
+        <div id="tab-classification" class="nav-tab">
+          Gerador de Classificação
+        </div>
+        <div id="tab-corrida-report" class="nav-tab">
+          Relatório Corrida/Caminhada
+        </div>
         <div id="tab-copia" class="nav-tab">Relatório para Cópia</div>
       </nav>
 
@@ -473,6 +479,55 @@
           <div
             id="physical-report-container"
             class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6"
+          >
+            <div class="loader"></div>
+          </div>
+        </section>
+      </main>
+
+      <main id="content-classification" class="hidden">
+        <section class="bg-white p-6 rounded-lg shadow-md">
+          <h2 class="text-2xl font-bold text-slate-700 border-b pb-2 mb-4">
+            Gerador de Classificação Dinâmica
+          </h2>
+          <p class="text-sm text-slate-500 mb-6">
+            Selecione até 5 critérios. O sistema agrupará todos os militares com
+            base em suas permissões e restrições para a combinação exata dos
+            critérios escolhidos.
+          </p>
+
+          <div
+            id="classification-filters-container"
+            class="space-y-6 mb-8 border-b pb-6"
+          >
+            <div class="loader"></div>
+          </div>
+
+          <div class="mt-8 text-center">
+            <button
+              id="generate-classification-btn"
+              class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg"
+            >
+              Gerar Classificação
+            </button>
+          </div>
+
+          <div id="classification-results-container" class="mt-8"></div>
+        </section>
+      </main>
+
+      <main id="content-corrida-report" class="hidden">
+        <section class="bg-white p-6 rounded-lg shadow-md">
+          <h2 class="text-2xl font-bold text-slate-700 border-b pb-2 mb-4">
+            Relatório de Aptidão para Corrida e Caminhada
+          </h2>
+          <p class="text-sm text-slate-500 mb-6">
+            Classificação de todo o efetivo com base nas restrições de corrida e
+            caminhada.
+          </p>
+          <div
+            id="corrida-report-container"
+            class="grid grid-cols-1 lg:grid-cols-2 gap-8"
           >
             <div class="loader"></div>
           </div>
@@ -986,8 +1041,10 @@
         });
       }
 
-      function renderReportFilters() {
-        const container = document.getElementById("report-filters-container");
+      // --- MODIFICADO --- Refatorado para aceitar um container
+      function renderFilters(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
         container.innerHTML = "";
         const dispensasDiv = document.createElement("div");
         dispensasDiv.innerHTML =
@@ -998,11 +1055,11 @@
         formConfig.dispensasGerais.forEach((item) => {
           const checkboxDiv = document.createElement("div");
           checkboxDiv.className = "flex items-center";
-          checkboxDiv.innerHTML = `<input id="filter-${toSqlName(
+          checkboxDiv.innerHTML = `<input id="filter-${containerId}-${toSqlName(
             item.text
           )}" type="checkbox" value="${
             item.text
-          }" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"><label for="filter-${toSqlName(
+          }" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"><label for="filter-${containerId}-${toSqlName(
             item.text
           )}" class="ml-3 text-sm text-gray-700">${item.text}</label>`;
           dispensasGrid.appendChild(checkboxDiv);
@@ -1022,9 +1079,9 @@
             const uniqueText = `${category} - ${itemText}`;
             const checkboxDiv = document.createElement("div");
             checkboxDiv.className = "flex items-center";
-            checkboxDiv.innerHTML = `<input id="filter-${toSqlName(
+            checkboxDiv.innerHTML = `<input id="filter-${containerId}-${toSqlName(
               uniqueText
-            )}" type="checkbox" value="${uniqueText}" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"><label for="filter-${toSqlName(
+            )}" type="checkbox" value="${uniqueText}" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"><label for="filter-${containerId}-${toSqlName(
               uniqueText
             )}" class="ml-3 text-sm text-gray-700">${itemText}</label>`;
             aptidoesGrid.appendChild(checkboxDiv);
@@ -1168,7 +1225,6 @@
           return;
         }
 
-        // Objeto com as regras de agrupamento que estava faltando
         const groupingRules = {
           dispensas: {
             Policiamento: [
@@ -1266,7 +1322,7 @@
             ],
           },
           aptidoes: {
-            "Ordem Unida": [
+            "1. Ordem Unida": [
               {
                 full: "Executar movimentos de ordem unida a pé firme desarmados",
                 short: "mov. a pé firme (desarmado)",
@@ -1293,7 +1349,7 @@
                 short: "instrução teórica",
               },
             ],
-            "Defesa Pessoal": [
+            "2. Defesa Pessoal": [
               {
                 full: "Executar posturas defensivas",
                 short: "posturas defensivas",
@@ -1383,7 +1439,7 @@
                 short: "executar movimento contrário",
               },
             ],
-            "Técnica Policial Militar": [
+            "3. Técnica Policial Militar": [
               {
                 full: "Utilizar arma de fogo desmuniciada",
                 short: "usar arma desmuniciada",
@@ -1401,7 +1457,7 @@
               { full: "Abordagem a veículos", short: "abordagem a veículos" },
               { full: "Executar escolta policial", short: "escolta policial" },
             ],
-            "Educação Física": [
+            "4. Educação Física": [
               { full: "Corrida 2.400m", short: "corrida 2.400m" },
               { full: "Corrida 200 m", short: "corrida 200m" },
               { full: "Flexão Abdominal", short: "flexão abdominal" },
@@ -1443,7 +1499,7 @@
               },
               { full: "Treinamento anaeróbico", short: "treino anaeróbico" },
             ],
-            "Armamento e Tiro": [
+            "5. Armamento e Tiro": [
               {
                 full: "Manusear arma de fogo desmuniciada",
                 short: "manuseio (desmuniciada)",
@@ -1557,7 +1613,7 @@
                 short: "uso de arma de impulso elétrico",
               },
             ],
-            "Estágio Supervisionado": [
+            "6. Estágio Supervisionado": [
               { full: "Sentinela interno armado", short: "sentinela (armado)" },
               {
                 full: "Sentinela interno desarmado",
@@ -1683,22 +1739,24 @@
 
           for (const groupName of sortedGroupNames) {
             if (
-              (ocultarOrdemUnida && groupName === "Ordem Unida") ||
-              (ocultarDefesaPessoal && groupName === "Defesa Pessoal") ||
+              (ocultarOrdemUnida && groupName.includes("Ordem Unida")) ||
+              (ocultarDefesaPessoal && groupName.includes("Defesa Pessoal")) ||
               (ocultarTecnicaPolicial &&
-                groupName === "Técnica Policial Militar") ||
-              (ocultarArmamentoTiro && groupName === "Armamento e Tiro") ||
-              (ocultarEdFisica && groupName === "Educação Física") ||
-              (ocultarEstagio && groupName === "Estágio Supervisionado")
+                groupName.includes("Técnica Policial Militar")) ||
+              (ocultarArmamentoTiro &&
+                groupName.includes("Armamento e Tiro")) ||
+              (ocultarEdFisica && groupName.includes("Educação Física")) ||
+              (ocultarEstagio && groupName.includes("Estágio Supervisionado"))
             ) {
               continue;
             }
 
             if (groups[groupName].length > 0) {
               formattedParts.push(
-                `<strong>${groupName}</strong> (${groups[groupName].join(
-                  ", "
-                )})`
+                `<strong>${groupName.replace(
+                  /^\d+\.\s/,
+                  ""
+                )}</strong> (${groups[groupName].join(", ")})`
               );
             }
           }
@@ -1816,6 +1874,124 @@
         return data;
       }
 
+      // --- NOVO --- Função para renderizar o relatório Corrida/Caminhada
+      function renderCorridaCaminhadaReport(data) {
+        const container = document.getElementById("corrida-report-container");
+        container.innerHTML = "";
+
+        const createGroupCard = (title, groupData, colorClass) => {
+          const card = document.createElement("div");
+          card.className = `bg-slate-50 p-4 rounded-lg border-l-4 ${colorClass}`;
+
+          const titleEl = document.createElement("h3");
+          titleEl.className = "text-lg font-bold text-slate-800 mb-3";
+          titleEl.innerHTML = `${title} <span class="font-semibold">(${groupData.length})</span>`;
+          card.appendChild(titleEl);
+
+          if (groupData.length > 0) {
+            const list = document.createElement("ul");
+            list.className =
+              "list-disc list-inside space-y-1 text-sm text-gray-800";
+            groupData.forEach((militar) => {
+              const item = document.createElement("li");
+              item.textContent = `${militar.nome_completo} (Nº PM: ${
+                militar.numero_pm || "N/A"
+              })`;
+              list.appendChild(item);
+            });
+            card.appendChild(list);
+          } else {
+            const noDataText = document.createElement("p");
+            noDataText.className = "text-sm text-slate-500";
+            noDataText.textContent = "Nenhum militar neste grupo.";
+            card.appendChild(noDataText);
+          }
+          return card;
+        };
+
+        container.appendChild(
+          createGroupCard(
+            "❌ Não Pode Correr, ✔️ Pode Caminhar",
+            data.naoPodeCorrer_podeCaminhar,
+            "border-blue-500"
+          )
+        );
+        container.appendChild(
+          createGroupCard(
+            "❌ Não Pode Correr, ❌ Não Pode Caminhar",
+            data.naoPodeCorrer_nemCaminhar,
+            "border-red-600"
+          )
+        );
+        container.appendChild(
+          createGroupCard(
+            "✔️ Pode Correr e Caminhar",
+            data.podeTudo,
+            "border-green-600"
+          )
+        );
+        if (data.outros && data.outros.length > 0) {
+          container.appendChild(
+            createGroupCard(
+              "⚙️ Outras Combinações",
+              data.outros,
+              "border-gray-400"
+            )
+          );
+        }
+      }
+
+      // --- NOVO --- Função para renderizar o relatório de Classificação Dinâmica
+      function renderClassificationReport(data) {
+        const container = document.getElementById(
+          "classification-results-container"
+        );
+        container.innerHTML = "";
+        const { results, criteriaNames } = data;
+
+        if (Object.keys(results).length === 0) {
+          container.innerHTML =
+            '<p class="text-center text-slate-500">Nenhum resultado encontrado para esta combinação.</p>';
+          return;
+        }
+
+        let reportHtml =
+          '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">';
+
+        const sortedGroupKeys = Object.keys(results).sort().reverse();
+
+        for (const groupKey of sortedGroupKeys) {
+          const groupData = results[groupKey];
+          const statuses = groupKey.split(";");
+
+          let cardHeader = "";
+          statuses.forEach((status, index) => {
+            const criterionName =
+              criteriaNames[index] || `Critério ${index + 1}`;
+            cardHeader += `<div class="flex items-center gap-2"><span class="text-2xl">${status}</span> <span class="text-sm font-semibold text-slate-700">${criterionName}</span></div>`;
+          });
+
+          let listItems = "";
+          groupData.forEach((militar) => {
+            listItems += `<li class="text-sm">${
+              militar.nome_completo
+            } <span class="text-xs text-slate-500">(Nº ${
+              militar.numero_pm || "N/A"
+            })</span></li>`;
+          });
+
+          reportHtml += `
+                <div class="card p-4 bg-slate-50 border">
+                    <div class="space-y-2 border-b pb-3 mb-3">${cardHeader}</div>
+                    <h4 class="font-bold mb-2">Militares neste grupo (${groupData.length}):</h4>
+                    <ul class="list-disc list-inside space-y-1">${listItems}</ul>
+                </div>
+            `;
+        }
+
+        container.innerHTML = reportHtml + "</div>";
+      }
+
       async function initializeApp() {
         try {
           const [formRes, criteriosRes] = await Promise.all([
@@ -1832,7 +2008,7 @@
 
           renderDispensas();
           renderAdaptacao();
-          renderReportFilters();
+          renderFilters("report-filters-container"); // --- MODIFICADO ---
           renderQuickFilters();
           await fetchAllReports();
           populateEditDropdown();
@@ -1868,6 +2044,16 @@
             tab: document.getElementById("tab-physical-report"),
             content: document.getElementById("content-physical-report"),
           },
+          // --- NOVO ---
+          classification: {
+            tab: document.getElementById("tab-classification"),
+            content: document.getElementById("content-classification"),
+          },
+          // --- NOVO ---
+          corridaReport: {
+            tab: document.getElementById("tab-corrida-report"),
+            content: document.getElementById("content-corrida-report"),
+          },
           copia: {
             tab: document.getElementById("tab-copia"),
             content: document.getElementById("content-copia"),
@@ -1882,6 +2068,52 @@
           tabs[tabId].tab.classList.add("nav-tab-active");
           tabs[tabId].content.classList.remove("hidden");
         }
+
+        // --- NOVO --- Listener para o botão de classificação
+        document
+          .getElementById("generate-classification-btn")
+          .addEventListener("click", async () => {
+            const selectedFilters = Array.from(
+              document.querySelectorAll(
+                '#classification-filters-container input[type="checkbox"]:checked'
+              )
+            ).map((cb) => cb.value);
+
+            if (selectedFilters.length === 0) {
+              alert("Selecione pelo menos um critério.");
+              return;
+            }
+            if (selectedFilters.length > 5) {
+              alert("Por favor, selecione no máximo 5 critérios.");
+              return;
+            }
+
+            const resultsContainer = document.getElementById(
+              "classification-results-container"
+            );
+            resultsContainer.innerHTML = '<div class="loader"></div>';
+
+            try {
+              const response = await fetch(
+                `${API_BASE_URL}/gerar-relatorio-classificacao`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ criterios: selectedFilters }),
+                }
+              );
+
+              if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.error || "Erro do servidor.");
+              }
+
+              const data = await response.json();
+              renderClassificationReport(data);
+            } catch (error) {
+              resultsContainer.innerHTML = `<p class="text-red-500 font-bold text-center">${error.message}</p>`;
+            }
+          });
 
         Object.keys(tabs).forEach((tabId) => {
           tabs[tabId].tab.addEventListener("click", async () => {
@@ -1917,6 +2149,31 @@
               container.innerHTML = '<div class="loader"></div>';
               await fetchAllReports();
               renderCopyReport(allReportsData);
+            }
+            // --- NOVO --- Lógica para as novas abas
+            else if (tabId === "corridaReport") {
+              const container = document.getElementById(
+                "corrida-report-container"
+              );
+              container.innerHTML = '<div class="loader col-span-full"></div>';
+              try {
+                const response = await fetch(
+                  `${API_BASE_URL}/relatorio-corrida-caminhada`
+                );
+                if (!response.ok)
+                  throw new Error("Falha ao buscar dados do relatório.");
+                const data = await response.json();
+                renderCorridaCaminhadaReport(data);
+              } catch (error) {
+                container.innerHTML = `<p class="text-red-500">${error.message}</p>`;
+              }
+            } else if (tabId === "classification") {
+              const filtersContainer = document.getElementById(
+                "classification-filters-container"
+              );
+              if (filtersContainer.querySelector(".loader")) {
+                renderFilters("classification-filters-container"); // --- MODIFICADO ---
+              }
             }
           });
         });
@@ -2092,7 +2349,10 @@
                 {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ filtros: selectedFilters }),
+                  body: JSON.stringify({
+                    filtros: selectedFilters,
+                    operator: "AND",
+                  }), // --- MODIFICADO --- Para usar a lógica AND que discutimos
                 }
               );
               const result = await response.json();
